@@ -1,29 +1,33 @@
 # Native Bitcoin Core integration workspace
 
-## Current state
+## Current implementation status
 
 - Upstream: Bitcoin Core `v32.1`
-- Tag object and commit: locked in [upstream.lock.toml](upstream.lock.toml)
-- Bootstrap: [scripts/bootstrap-bitcoin-core.sh](../scripts/bootstrap-bitcoin-core.sh)
-- Local source destination: `.work/bitcoin-core-v32.1` (local working copy; do not commit generated build output)
-- UNITED patch series: **not yet implemented**
-- Native UNITED daemon: **not yet built**
-- Genesis and network parameters: **not yet selected**
+- Exact tag object and commit: locked in [upstream.lock.toml](upstream.lock.toml)
+- Native patch: [0001-add-united-regtest.patch](patches/0001-add-united-regtest.patch)
+- Build and smoke-test workflow: [bitcoin-core-upstream.yml](../.github/workflows/bitcoin-core-upstream.yml)
+- Bootstrap helper: [bootstrap-bitcoin-core.sh](../scripts/bootstrap-bitcoin-core.sh)
 
-The bootstrap script clones the upstream repository, checks the exact annotated tag object and commit against the lock file, and runs `git verify-tag`. Signature verification requires the operator to independently obtain and trust the correct maintainer key. A valid signature from an untrusted key is not sufficient.
+The first native C++ patch adds a private `unitedregtest` chain type, distinct genesis block, message magic, ports, data directory and address prefixes. It uses Bitcoin Core's native SHA-256d proof-of-work, block validation, UTXO, P2P and RPC machinery.
 
-## Why upstream source is not copied into this repository yet
+**Important:** this is a private development network. It deliberately uses an easy PoW target, allows minimum difficulty and disables retargeting for rapid local testing. These settings are not proposed mainnet settings.
 
-Bitcoin Core is a substantial independently maintained codebase. The safest first step is a deterministic source checkout, followed by a small reviewed patch series. Avoid an opaque copy, a blind mass-rebrand, or relabelling upstream binaries as UNITED. Preserve all upstream licensing and copyright notices.
+## Build process
 
-## Integration sequence
+The GitHub Actions workflow:
+1. Clones the exact Bitcoin Core v32.1 release.
+2. Verifies the locked tag object and commit IDs.
+3. Applies the UNITED C++ patch.
+4. Compiles the native daemon and CLI.
+5. Starts `bitcoind -chain=unitedregtest` and checks the genesis hash over RPC.
 
-1. Verify the maintainer signing-key fingerprint out of band.
-2. Run the bootstrap script on a machine with Git and the required trusted keyring.
-3. Build and test unmodified upstream v32.1; save logs and toolchain/dependency metadata.
-4. Add a narrow patch series for UNITED chain parameters and monetary policy.
-5. Add deterministic genesis generation and separate regtest/testnet/mainnet identities.
-6. Add consensus-specific functional tests and compare expected results against independent implementations.
-7. Review the complete diff against the pinned upstream commit.
+The workflow run must pass before claiming a successful native build. The release signing key still requires independent fingerprint verification for a release-grade source provenance check.
 
-No network identifiers, genesis values, seeds, or launch settings may be guessed to make the build appear complete.
+## Still not implemented
+
+- UNITED public testnet and mainnet chain parameters
+- Mainnet genesis and production difficulty configuration
+- Independent consensus test vectors and audit
+- Production release builds, seed infrastructure and launch readiness
+
+Do not relabel upstream binaries as UNITED or accept funds on this private regtest network.
