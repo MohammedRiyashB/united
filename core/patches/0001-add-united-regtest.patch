@@ -36,7 +36,7 @@ diff --git a/src/chainparamsbase.h b/src/chainparamsbase.h
 index 1407f19..0000000 100644
 --- a/src/chainparamsbase.h
 +++ b/src/chainparamsbase.h
-@@ -35,6 +35,6 @@ void SelectBaseParams(ChainType chain);
+@@ -35,5 +35,5 @@ void SelectBaseParams(ChainType chain);
  
  /** List of possible chain / network names  */
 -#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest"
@@ -60,7 +60,7 @@ diff --git a/src/kernel/chainparams.h b/src/kernel/chainparams.h
 index 2c85b8e..0000000 100644
 --- a/src/kernel/chainparams.h
 +++ b/src/kernel/chainparams.h
-@@ -151,6 +151,8 @@ public:
+@@ -151,4 +151,6 @@ public:
      static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);
      static std::unique_ptr<const CChainParams> RegTest() { const RegTestOptions opts{}; return RegTest(opts); }
 +    static std::unique_ptr<const CChainParams> UnitedRegTest(const RegTestOptions& options);
@@ -71,7 +71,7 @@ diff --git a/src/chainparams.cpp b/src/chainparams.cpp
 index bab4384..0000000 100644
 --- a/src/chainparams.cpp
 +++ b/src/chainparams.cpp
-@@ -119,6 +119,10 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
+@@ -119,6 +119,11 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
          ReadRegTestArgs(args, opts);
          return CChainParams::RegTest(opts);
      }
@@ -87,7 +87,7 @@ diff --git a/src/kernel/chainparams.cpp b/src/kernel/chainparams.cpp
 index a071833..0000000 100644
 --- a/src/kernel/chainparams.cpp
 +++ b/src/kernel/chainparams.cpp
-@@ -617,6 +617,87 @@ class CRegTestParams : public CChainParams
+@@ -617,6 +617,86 @@ class CRegTestParams : public CChainParams
      }
  };
  
@@ -174,7 +174,7 @@ index a071833..0000000 100644
  std::unique_ptr<const CChainParams> CChainParams::SigNet(const SigNetOptions& options)
  {
      return std::make_unique<const SigNetParams>(options);
-@@ -629,6 +710,11 @@ std::unique_ptr<const CChainParams> CChainParams::RegTest(const RegTestOptions&
+@@ -629,7 +710,12 @@ std::unique_ptr<const CChainParams> CChainParams::RegTest(const RegTestOptions&
  {
      return std::make_unique<const CRegTestParams>(options);
  }
@@ -195,7 +195,7 @@ index a071833..0000000 100644
  
      if (std::ranges::equal(message, mainnet_msg)) {
          return ChainType::MAIN;
-@@ -674,6 +761,8 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
+@@ -674,7 +761,9 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
          return ChainType::REGTEST;
      } else if (std::ranges::equal(message, signet_msg)) {
          return ChainType::SIGNET;
