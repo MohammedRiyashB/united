@@ -146,8 +146,8 @@ index a071833..0000000 100644
 +            CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG,
 +            1794000000, 0, 0x207fffff, 1, 50 * COIN);
 +        consensus.hashGenesisBlock = genesis.GetHash();
-+        assert(consensus.hashGenesisBlock == uint256{"192fba62b84f78d15a0030ad5387a08a7addad7a85f49f6cab47ddb9652c6af3"});
-+        assert(genesis.hashMerkleRoot == uint256{"611e69bec273aeb72df605cc88ee95e670566e63a727ec5e64b5335e5705bd36"});
++        assert(consensus.hashGenesisBlock == uint256{"2739e631581bbb86a9dfe9827c2ba84ff1ca53a96e0fbaa809784b351540c44a"});
++        assert(genesis.hashMerkleRoot == uint256{"a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7"});
 +
 +        vFixedSeeds.clear();
 +        vSeeds.clear();
