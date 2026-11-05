@@ -78,18 +78,30 @@ jobs:
             "$cli" "${rpc1[@]}" stop >/dev/null 2>&1 || true
             rm -rf "$node1" "$node2"
           }
+          dump_diagnostics() {
+            echo "===== node1 process ====="
+            pgrep -af 'bitcoind.*unitedregtest' || true
+            echo "===== node1 debug.log ====="
+            find "$node1" -name debug.log -type f -print -exec tail -n 160 {} \; || true
+            echo "===== node2 debug.log ====="
+            find "$node2" -name debug.log -type f -print -exec tail -n 160 {} \; || true
+          }
           trap cleanup EXIT
 
-          "$daemon" -chain=unitedregtest -datadir="$node1" -daemon=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29443 -port=29444 -fallbackfee=0.0002
-          "$daemon" -chain=unitedregtest -datadir="$node2" -daemon=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29453 -port=29445 -fallbackfee=0.0002
+          # daemonwait makes startup failure synchronous instead of letting the
+          # daemonizing parent report success before initialization completes.
+          "$daemon" -chain=unitedregtest -datadir="$node1" -daemonwait=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29443 -port=29444 -fallbackfee=0.0002 -debug=1
+          "$daemon" -chain=unitedregtest -datadir="$node2" -daemonwait=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29453 -port=29445 -fallbackfee=0.0002 -debug=1
 
           wait_rpc() {
             local -n args=$1
-            for attempt in $(seq 1 40); do
-              if "$cli" "${args[@]}" getblockchaininfo >/dev/null 2>&1; then return 0; fi
+            local last_error=""
+            for attempt in $(seq 1 90); do
+              if last_error="$("$cli" "${args[@]}" getblockchaininfo 2>&1)"; then return 0; fi
               sleep 1
             done
-            echo "RPC did not become ready" >&2
+            echo "RPC did not become ready; last bitcoin-cli error: $last_error" >&2
+            dump_diagnostics
             return 1
           }
           wait_rpc rpc1
