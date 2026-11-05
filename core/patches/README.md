@@ -1,13 +1,9 @@
-# UNITED patch series
+# UNITED native patch series
 
-**Status: empty — no native UNITED patches have been applied.**
+**Patch 0001 is implemented:** `0001-add-united-regtest.patch`.
 
-Patches will be numbered and kept small, for example:
+It adds a private development chain named `unitedregtest` to the pinned Bitcoin Core v32.1 source. The patch includes a unique genesis block and isolated network identifiers, while retaining native Bitcoin Core consensus validation and SHA-256d proof-of-work.
 
-- `0001-chainparams-add-united-regtest.patch`
-- `0002-consensus-add-united-subsidy.patch`
-- `0003-chainparams-add-united-testnet.patch`
+This is not the public UNITED testnet or mainnet. Its easy PoW target and no-retargeting setting are deliberately limited to private regression testing.
 
-Do not create mainnet parameters until their values and genesis are independently reviewed. Each patch must include corresponding native unit/functional tests, rationale, upstream file references, and an explicit consensus-impact assessment.
-
-The initial implementation should start with a disposable regtest network. Mainnet and public testnet must remain unavailable until separate identities and activation rules are reviewed. Never patch Bitcoin Core's historical Bitcoin mainnet genesis or activation history in place and assume it is suitable for UNITED.
+Every subsequent patch must include native C++ tests, rationale, exact upstream file references and a consensus-impact assessment. Do not introduce production network settings until they have been reviewed and independently tested.
