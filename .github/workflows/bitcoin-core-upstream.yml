@@ -88,10 +88,38 @@ jobs:
           }
           trap cleanup EXIT
 
-          # daemonwait makes startup failure synchronous instead of letting the
-          # daemonizing parent report success before initialization completes.
-          "$daemon" -chain=unitedregtest -datadir="$node1" -daemonwait=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29443 -port=29444 -fallbackfee=0.0002 -debug=1
-          "$daemon" -chain=unitedregtest -datadir="$node2" -daemonwait=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29453 -port=29445 -fallbackfee=0.0002 -debug=1
+          # Capture startup output and dump debug.log on failure. With set -e,
+          # an unguarded daemonwait failure would exit before the diagnostics run.
+          start_node() {
+            local label="$1"
+            local datadir="$2"
+            local rpcport="$3"
+            local p2pport="$4"
+            local startup_log="$datadir/bitcoind-startup.log"
+            local status=0
+
+            echo "===== Starting ${label} (RPC ${rpcport}, P2P ${p2pport}) ====="
+            if "$daemon" -chain=unitedregtest -datadir="$datadir" \
+              -daemonwait=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" \
+              -rpcport="$rpcport" -port="$p2pport" -fallbackfee=0.0002 -debug=1 \
+              >"$startup_log" 2>&1; then
+              cat "$startup_log"
+              echo "===== ${label} initialized successfully ====="
+            else
+              status=$?
+              echo "===== ${label} failed during initialization (exit ${status}) =====" >&2
+              echo "===== ${label} startup output =====" >&2
+              cat "$startup_log" >&2 || true
+              echo "===== ${label} debug.log =====" >&2
+              find "$datadir" -type f -name debug.log -print -exec tail -n 240 {} \; >&2 || true
+              echo "===== All node diagnostics =====" >&2
+              dump_diagnostics
+              return "$status"
+            fi
+          }
+
+          start_node node1 "$node1" 29443 29444
+          start_node node2 "$node2" 29453 29445
 
           wait_rpc() {
             local -n args=$1
