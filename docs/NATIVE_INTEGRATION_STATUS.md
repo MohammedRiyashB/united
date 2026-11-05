@@ -55,3 +55,10 @@ No mainnet launch, public token sale, custody of user funds, or exchange listing
 The two-node workflow run `42120978922` successfully cloned the pinned source, applied the patch, configured CMake and compiled the wallet-enabled daemon/CLI. Both daemon invocations printed `Bitcoin Core starting`, but the script's RPC readiness loop timed out after 40 seconds. The previous workflow daemonized immediately and suppressed all bitcoin-cli errors; it did not preserve or print either node's `debug.log`, so that run does **not** reveal the underlying startup failure.
 
 The test harness is corrected to use `-daemonwait=1` so daemon initialization failures are returned synchronously, enable debug logging, report the last bitcoin-cli error, and dump each node's debug log if RPC is still unavailable. This is a diagnostics fix; the underlying RPC cause and the functional tests remain unverified until the next CI run.
+
+
+## Follow-up startup diagnostics (2026-11-06)
+
+GitHub Actions job `127578648991` (run `114141748682`) compiled the wallet-enabled node and then failed in the node-start step. Its console shows two `Bitcoin Core starting` messages followed by `Error during initialization - check debug.log for details`. The log does **not** contain the underlying cause: with Bash `set -e`, the failing `-daemonwait` command terminated the step before the existing `dump_diagnostics` function or RPC wait logic could execute. The job's temporary datadirs were subsequently cleaned up, so the missing debug log cannot be recovered from that run.
+
+The workflow now wraps each daemon startup in an explicit conditional, captures that node's startup output, and on failure prints the captured output plus the node's `debug.log` tail and both-node process/log diagnostics before returning the original exit status. The actual consensus/node startup cause is still not proven; it will be visible in the next run's failure output.
