@@ -5,8 +5,7 @@ set -Eeuo pipefail
 # It does NOT patch, rename, or build Bitcoin Core as UNITED.
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 LOCK_FILE="$ROOT_DIR/core/upstream.lock.toml"
-DEST="$1"
-if [[ -z "$DEST" ]]; then DEST="$ROOT_DIR/.work/bitcoin-core-v32.1"; fi
+DEST="${1:-$ROOT_DIR/.work/bitcoin-core-v32.1}"
 
 read_lock() {
   local key="$1"
