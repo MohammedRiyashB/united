@@ -20,6 +20,10 @@
 | Run upstream and UNITED functional/fuzz/sanitizer tests | Not started | CI artifacts and review |
 | Independent consensus/security review | Not started | Published findings and remediation |
 
+## Automated build validation
+
+A GitHub Actions workflow now clones the pinned upstream tag, checks the exact tag object and commit, and compiles the minimal daemon/CLI targets. The workflow is intended to provide the first actual upstream clone/build evidence. It does not yet compile UNITED-specific patches.
+
 ## Immediate next command
 
 ```bash
