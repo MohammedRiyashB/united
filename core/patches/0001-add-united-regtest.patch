@@ -195,7 +195,7 @@ index a071833..0000000 100644
  
      if (std::ranges::equal(message, mainnet_msg)) {
          return ChainType::MAIN;
-@@ -674,7 +761,9 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
+@@ -674,6 +761,8 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
          return ChainType::REGTEST;
      } else if (std::ranges::equal(message, signet_msg)) {
          return ChainType::SIGNET;
