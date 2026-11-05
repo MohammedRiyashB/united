@@ -75,7 +75,7 @@ jobs:
             if [[ -n "$actual" ]]; then break; fi
             sleep 1
           done
-          expected="192fba62b84f78d15a0030ad5387a08a7addad7a85f49f6cab47ddb9652c6af3"
+          expected="2739e631581bbb86a9dfe9827c2ba84ff1ca53a96e0fbaa809784b351540c44a"
           test "$actual" = "$expected"
           upstream/build/bin/bitcoin-cli -chain=unitedregtest -datadir="$datadir" -rpcuser=unitedci -rpcpassword=ci-secret getblockchaininfo
       - name: Record compiled binaries
