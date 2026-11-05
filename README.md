@@ -2,7 +2,7 @@
 
 **United** is a proposed independent, SHA-256d proof-of-work cryptocurrency with a UTXO ledger and a nominal supply cap of 21,000,000 UNITED.
 
-> **Project status: engineering specification + tested monetary-policy reference model. Not a live blockchain.** This repository does not yet contain a production full node, peer-to-peer network, mining implementation, wallet, genesis block, seed nodes, explorer, or audited consensus code. Do not send funds to an address claiming to be a UNITED mainnet address. No UNITED mainnet coins currently exist.
+> **Project status: engineering specification + tested monetary-policy and regtest PoW prototypes. Not a live blockchain.** This repository does not yet contain a production full node, peer-to-peer network, mining implementation, wallet, genesis block, seed nodes, explorer, or audited consensus code. Do not send funds to an address claiming to be a UNITED mainnet address. No UNITED mainnet coins currently exist.
 
 ## Current agreed design
 
@@ -21,7 +21,7 @@
 | Premine | 0 |
 | Coinbase maturity | 100 blocks (draft) |
 
-The exact scheduled subsidy issuance after smallest-unit integer halving is **20,999,999.97690000 UNITED**, below the nominal 21 million cap. Unclaimed coinbase rewards can reduce actual circulating issuance further. The Go reference model tests these values.
+The exact scheduled subsidy issuance after smallest-unit integer halving is **20,999,999.97690000 UNITED**, below the nominal 21 million cap. Unclaimed coinbase rewards can reduce actual circulating issuance further. The Go reference model tests these values. A separate SHA-256d header demonstration mines and verifies a low-difficulty local regtest header; it is not a full node or live network.
 
 ## Repository status
 
@@ -29,6 +29,7 @@ The exact scheduled subsidy issuance after smallest-unit integer halving is **20
 |---|---|
 | Architecture, threat model, roadmap | Drafted |
 | Monetary schedule reference implementation | Implemented and unit-tested |
+| SHA-256d header PoW demo | Implemented and unit-tested (regtest only) |
 | Network identities / genesis block | Not generated; deliberately unset |
 | Production blockchain core | Not implemented |
 | P2P node, miner, pool | Not implemented |
@@ -47,6 +48,7 @@ go test -race ./...
 go vet ./...
 go run ./cmd/united-params
 go run ./cmd/united-params subsidy 210000
+go run ./cmd/united-powdemo
 ```
 
 Expected subsidy at height 210000: `25.00000000 UNITED`.
