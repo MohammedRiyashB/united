@@ -1,39 +1,51 @@
 # UNITED native Bitcoin Core integration status
 
-**Branch:** `integration/bitcoin-core-32.1-native`  
-**Upstream pin:** Bitcoin Core `v32.1`  
-**Status:** native private-regtest patch applies and compiles; genesis smoke test exposed incorrect locally calculated constants. Constants have been recalculated from Bitcoin transaction/block serialization; native RPC confirmation is pending.
+**Active test branch:** `integration/united-regtest-functional-tests`  
+**Upstream:** Bitcoin Core `v32.1` pinned to the reviewed commit in `core/upstream.lock.toml`.
 
-## Milestones
+## Verified milestone: native private regtest build
 
-| Milestone | Status | Evidence / exit criteria |
-|---|---|---|
-| Pin upstream tag and commit | Recorded | `core/upstream.lock.toml` |
-| Create isolated implementation branch | Complete | Git branch name |
-| Deterministic upstream bootstrap | Added | Script verifies tag object, commit and signed tag |
-| Independently trust maintainer key | Pending | Fingerprint verified from trusted project source |
-| Build unmodified upstream v32.1 | Pending | Clean build log and test results |
-| Add UNITED private-regtest C++ patch | Implemented, CI pending | `core/patches/0001-add-united-regtest.patch` |
-| Implement UNITED subsidy and money range | Not started | Native unit tests at every halving boundary |
-| Define regtest/testnet/mainnet parameters | Not started | Collision-checked network identities |
-| Private regtest genesis | Recalculated; native RPC verification pending | Expected block hash `2739e631581bbb86a9dfe9827c2ba84ff1ca53a96e0fbaa809784b351540c44a`; merkle root `a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7` |
-| Run upstream and UNITED functional/fuzz/sanitizer tests | Not started | CI artifacts and review |
-| Independent consensus/security review | Not started | Published findings and remediation |
+GitHub Actions run `42119554863` completed successfully. Its job passed all ten steps:
+- clone pinned upstream;
+- verify exact tag object and commit;
+- apply UNITED C++ patch;
+- configure CMake;
+- compile native daemon and CLI;
+- start `unitedregtest`;
+- query and verify genesis block hash over RPC.
 
-## Automated build validation
+Expected private-regtest genesis hash:
+`2739e631581bbb86a9dfe9827c2ba84ff1ca53a96e0fbaa809784b351540c44a`
 
-A GitHub Actions workflow clones the pinned upstream tag, checks the exact tag object and commit, applies the UNITED C++ patch, compiles the daemon/CLI, starts `unitedregtest`, and checks its genesis hash over RPC. A passing run is required before claiming a successful native build.
+Expected genesis Merkle root:
+`a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7`
 
-## Immediate next command
+This proves a working **private development regtest** only. It does not prove a public network, production consensus readiness, or mainnet launch.
 
-```bash
-bash scripts/bootstrap-bitcoin-core.sh
-```
+## Next validation added in this branch
 
-The default destination is local workspace `.work/bitcoin-core-v32.1`. If tag verification fails because the signing key is absent, stop and independently verify/import the official maintainer key; do not disable verification.
+The CI workflow is expanded to build wallet support and exercise two independent UNITED regtest nodes:
+1. Start two nodes with separate data directories and RPC/P2P ports.
+2. Verify both nodes report the expected genesis block.
+3. Create separate wallets and addresses.
+4. Mine 101 blocks and check coinbase maturity and miner balance.
+5. Establish a TCP P2P connection between the nodes.
+6. Send a wallet transaction from node 1 to node 2.
+7. Mine a confirmation block and verify node 2 syncs and its wallet receives the funds.
 
-After checkout, build the **unmodified upstream** first using the build instructions for the pinned release. Keep upstream build success separate from UNITED fork success.
+These are automated test intentions until the new workflow run passes. Do not mark mining, wallet, transaction or P2P validation complete before seeing that result.
 
-## Non-claims
+## Remaining production gates
 
-The branch contains a native private-regtest implementation, but it is not yet a verified successful build until CI passes. It is not a public testnet or mainnet and does not authorize accepting funds or launching a mainnet.
+- Add native unit and functional tests for monetary subsidy, maximum money, fee and overflow boundaries, difficulty retargeting, timestamp rules, script validation and reorg behavior.
+- Define separate public testnet and mainnet chain parameters with collision-checked network magic, ports, address prefixes, HRPs, genesis and seed infrastructure.
+- Freeze activation schedules and consensus parameters only after documented review and independent test vectors.
+- Build reproducible release binaries and secure signing/release procedures.
+- Operate a public testnet with multiple independent operators and a sustained soak period.
+- Commission independent consensus, cryptography, networking, wallet and operational security audits; publish findings and remediate them.
+
+## Mainnet safety
+
+The current private regtest deliberately uses an easy PoW target, minimum-difficulty allowance and disabled retargeting. These settings must never be copied to mainnet. The draft monetary schedule targets a nominal 21,000,000 UNITED cap (integer subsidy schedule totals 20,999,999.97690000 UNITED). Mainnet genesis and production PoW limit are not yet defined.
+
+No mainnet launch, public token sale, custody of user funds, or exchange listing is authorized by this engineering branch.
