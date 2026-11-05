@@ -2,7 +2,7 @@
 
 **Branch:** `integration/bitcoin-core-32.1-native`  
 **Upstream pin:** Bitcoin Core `v32.1`  
-**Status:** first native private-regtest patch committed; upstream clone/build and smoke test are running in GitHub Actions.
+**Status:** native private-regtest patch applies and compiles; genesis smoke test exposed incorrect locally calculated constants. Constants have been recalculated from Bitcoin transaction/block serialization; native RPC confirmation is pending.
 
 ## Milestones
 
@@ -16,7 +16,7 @@
 | Add UNITED private-regtest C++ patch | Implemented, CI pending | `core/patches/0001-add-united-regtest.patch` |
 | Implement UNITED subsidy and money range | Not started | Native unit tests at every halving boundary |
 | Define regtest/testnet/mainnet parameters | Not started | Collision-checked network identities |
-| Private regtest genesis | Hash calculated; RPC verification pending | CI checks expected genesis hash |
+| Private regtest genesis | Recalculated; native RPC verification pending | Expected block hash `2739e631581bbb86a9dfe9827c2ba84ff1ca53a96e0fbaa809784b351540c44a`; merkle root `a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7` |
 | Run upstream and UNITED functional/fuzz/sanitizer tests | Not started | CI artifacts and review |
 | Independent consensus/security review | Not started | Published findings and remediation |
 
