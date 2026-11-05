@@ -44,6 +44,11 @@ jobs:
           test "$actual_commit" = "$expected_commit"
           git checkout --detach "$expected_commit"
           git show -s --format='Pinned upstream commit: %H%n%s' HEAD
+      - name: Apply UNITED native regtest patch
+        run: |
+          cd upstream
+          git apply --check ../core/patches/0001-add-united-regtest.patch
+          git apply ../core/patches/0001-add-united-regtest.patch
       - name: Configure upstream build
         run: |
           cmake -S upstream -B upstream/build -G Ninja             -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DBUILD_GUI=OFF             -DWITH_ZMQ=OFF -DWITH_USDT=OFF
