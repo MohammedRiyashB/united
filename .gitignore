@@ -1,0 +1,26 @@
+# Go outputs
+/united-params
+*.test
+*.out
+
+# Node / app outputs planned for later
+node_modules/
+dist/
+build/
+coverage/
+
+# Secrets and local data
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+wallet.dat
+*.wallet
+chainstate/
+blocks/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

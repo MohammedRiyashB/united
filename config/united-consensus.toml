@@ -1,0 +1,43 @@
+# Draft economics and timing. NOT a node configuration and NOT launch-ready.
+[identity]
+name = "United"
+ticker = "UNITED"
+chain_model = "UTXO"
+consensus = "SHA-256d Proof of Work"
+
+[monetary_policy]
+decimals = 8
+nominal_supply_cap = 21000000
+initial_block_subsidy = 50
+halving_interval_blocks = 210000
+premine = 0
+coinbase_maturity_blocks = 100
+
+[proof_of_work]
+algorithm = "SHA-256d"
+target_spacing_seconds = 600
+target_timespan_seconds = 1209600
+retarget_interval_blocks = 2016
+allow_min_difficulty_blocks = false
+no_retargeting = false
+pow_limit = "UNSET_REQUIRES_REVIEW"
+retarget_algorithm = "UNSET_REQUIRES_PROTOCOL_DECISION"
+
+[block_limits]
+max_block_weight = 4000000
+
+[mainnet_identity]
+message_start_magic = "UNSET_COLLISION_CHECK_REQUIRED"
+p2p_port = "UNSET"
+rpc_port = "UNSET"
+bech32_hrp = "UNSET"
+base58_pubkey_prefix = "UNSET"
+base58_script_prefix = "UNSET"
+dns_seeds = []
+
+[genesis]
+time = "UNSET"
+nonce = "UNSET"
+bits = "UNSET"
+merkle_root = "UNSET"
+block_hash = "UNSET"

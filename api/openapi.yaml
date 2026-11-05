@@ -1,0 +1,78 @@
+openapi: 3.1.0
+info:
+  title: UNITED Explorer Read API
+  version: 0.1.0-draft
+  description: >-
+    Draft read-only API contract for an explorer backed by an independently
+    operated UNITED full node and indexer. This API is not implemented yet.
+servers:
+  - url: https://explorer-api.example.invalid/v1
+    description: Placeholder only; no production endpoint exists.
+paths:
+  /network:
+    get:
+      summary: Network identity and best-chain status
+      operationId: getNetworkInfo
+      responses:
+        '200':
+          description: Network status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [chain, network, best_height, best_block_hash, synced]
+                properties:
+                  chain: { type: string, enum: [united] }
+                  network: { type: string, enum: [mainnet, testnet, regtest] }
+                  best_height: { type: integer, minimum: 0 }
+                  best_block_hash: { type: string, pattern: '^[0-9a-f]{64}$' }
+                  synced: { type: boolean }
+  /blocks/{hash}:
+    get:
+      summary: Get indexed block metadata
+      operationId: getBlock
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[0-9a-f]{64}$' }
+      responses:
+        '200':
+          description: Block metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [hash, height, time, tx_count]
+                properties:
+                  hash: { type: string }
+                  height: { type: integer, minimum: 0 }
+                  time: { type: integer, minimum: 0 }
+                  tx_count: { type: integer, minimum: 0 }
+                  previous_block_hash: { type: string }
+        '404': { description: Block not found }
+  /transactions/{txid}:
+    get:
+      summary: Get indexed transaction details
+      operationId: getTransaction
+      parameters:
+        - name: txid
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[0-9a-f]{64}$' }
+      responses:
+        '200':
+          description: Transaction summary
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [txid, confirmed, inputs, outputs]
+                properties:
+                  txid: { type: string }
+                  confirmed: { type: boolean }
+                  block_hash: { type: [string, 'null'] }
+                  block_height: { type: [integer, 'null'] }
+                  inputs: { type: array, items: { type: object } }
+                  outputs: { type: array, items: { type: object } }
+        '404': { description: Transaction not found }

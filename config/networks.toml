@@ -1,0 +1,25 @@
+# All network identifiers remain placeholders until collision checks and
+# integration tests are performed. Never copy Bitcoin's mainnet identifiers.
+[mainnet]
+name = "UNITED Mainnet"
+message_start = "UNSET"
+p2p_port = 0
+rpc_port = 0
+address_hrp = "UNSET"
+seed_nodes = []
+
+[testnet]
+name = "UNITED Testnet"
+message_start = "UNSET"
+p2p_port = 0
+rpc_port = 0
+address_hrp = "UNSET"
+seed_nodes = []
+
+[regtest]
+name = "UNITED Regtest"
+message_start = "UNSET"
+p2p_port = 0
+rpc_port = 0
+address_hrp = "UNSET"
+seed_nodes = []
