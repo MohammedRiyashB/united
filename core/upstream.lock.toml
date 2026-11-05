@@ -1,0 +1,15 @@
+# UNITED upstream lock
+# This pins the source candidate; it does not mean UNITED is already a completed fork.
+upstream = "bitcoin/bitcoin"
+release_tag = "v32.1"
+tag_object = "94f59fa45ea443882655625f4a647608274453e2"
+commit = "f0de87f040621468b956f01f526a43a010310501"
+release_url = "https://github.com/bitcoin/bitcoin/releases/tag/v32.1"
+tag_verification = "GitHub API reports verified=true, reason=valid"
+tag_signer = "fanquake"
+tag_signer_key_id = "2EEB9F5CC09526C1"
+verified_at_utc = "2026-10-26T18:04:22Z"
+
+# Re-verify the signed tag with an independently obtained maintainer keyring before
+# using this source in a release build. Do not rely solely on this metadata file.
+# Preserve upstream license/copyright notices and review Bitcoin Core's COPYING.
