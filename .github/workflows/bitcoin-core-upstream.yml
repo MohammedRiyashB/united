@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - consensus/bitcoin-core-32.1-migration
+      - integration/bitcoin-core-32.1-native
     paths:
       - ".github/workflows/bitcoin-core-upstream.yml"
       - "core/upstream.lock.toml"
