@@ -1,4 +1,4 @@
-name: Bitcoin Core v32.1 upstream build
+name: Bitcoin Core v32.1 native UNITED build
 
 on:
   pull_request:
@@ -7,16 +7,16 @@ on:
     paths:
       - ".github/workflows/bitcoin-core-upstream.yml"
       - "core/upstream.lock.toml"
+      - "core/patches/**"
       - "scripts/bootstrap-bitcoin-core.sh"
-      - "core/**"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  upstream-source-build:
-    name: Clone, pin-check and build upstream v32.1
+  native-united-regtest:
+    name: Clone, patch, compile and smoke-test UNITED regtest
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
@@ -25,7 +25,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build pkg-config python3             libevent-dev libboost-dev
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config python3 libevent-dev libboost-dev
       - name: Clone Bitcoin Core source
         run: |
           git clone --no-checkout https://github.com/bitcoin/bitcoin.git upstream
@@ -44,12 +44,40 @@ jobs:
           test "$actual_commit" = "$expected_commit"
           git checkout --detach "$expected_commit"
           git show -s --format='Pinned upstream commit: %H%n%s' HEAD
-      - name: Configure upstream build
+      - name: Apply UNITED native C++ patch
         run: |
-          cmake -S upstream -B upstream/build -G Ninja             -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DBUILD_GUI=OFF             -DWITH_ZMQ=OFF -DWITH_USDT=OFF
-      - name: Compile upstream daemon and CLI
+          cd upstream
+          git apply --check ../core/patches/0001-add-united-regtest.patch
+          git apply ../core/patches/0001-add-united-regtest.patch
+      - name: Configure minimal daemon build
         run: |
-          cmake --build upstream/build --parallel 2
-      - name: Record upstream build outputs
+          cmake -S upstream -B upstream/build -G Ninja \
+            -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DBUILD_GUI=OFF \
+            -DBUILD_TX=OFF -DBUILD_UTIL=OFF -DENABLE_WALLET=OFF \
+            -DENABLE_IPC=OFF -DENABLE_EXTERNAL_SIGNER=OFF \
+            -DWITH_ZMQ=OFF -DWITH_USDT=OFF
+      - name: Compile native daemon and CLI
+        run: cmake --build upstream/build --parallel 2
+      - name: Start UNITED native regtest and verify genesis
+        shell: bash
+        run: |
+          set -euo pipefail
+          datadir="$(mktemp -d)"
+          cleanup() {
+            upstream/build/bin/bitcoin-cli -chain=unitedregtest -datadir="$datadir" -rpcuser=unitedci -rpcpassword=ci-secret stop >/dev/null 2>&1 || true
+            rm -rf "$datadir"
+          }
+          trap cleanup EXIT
+          upstream/build/bin/bitcoind -chain=unitedregtest -datadir="$datadir" -daemon=1 -rpcuser=unitedci -rpcpassword=ci-secret
+          actual=""
+          for attempt in $(seq 1 30); do
+            actual="$(upstream/build/bin/bitcoin-cli -chain=unitedregtest -datadir="$datadir" -rpcuser=unitedci -rpcpassword=ci-secret getblockhash 0 2>/dev/null || true)"
+            if [[ -n "$actual" ]]; then break; fi
+            sleep 1
+          done
+          expected="192fba62b84f78d15a0030ad5387a08a7addad7a85f49f6cab47ddb9652c6af3"
+          test "$actual" = "$expected"
+          upstream/build/bin/bitcoin-cli -chain=unitedregtest -datadir="$datadir" -rpcuser=unitedci -rpcpassword=ci-secret getblockchaininfo
+      - name: Record compiled binaries
         run: |
           find upstream/build/bin -maxdepth 1 -type f -printf '%f\n' | sort
