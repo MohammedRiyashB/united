@@ -49,3 +49,9 @@ These are automated test intentions until the new workflow run passes. Do not ma
 The current private regtest deliberately uses an easy PoW target, minimum-difficulty allowance and disabled retargeting. These settings must never be copied to mainnet. The draft monetary schedule targets a nominal 21,000,000 UNITED cap (integer subsidy schedule totals 20,999,999.97690000 UNITED). Mainnet genesis and production PoW limit are not yet defined.
 
 No mainnet launch, public token sale, custody of user funds, or exchange listing is authorized by this engineering branch.
+
+## RPC startup failure investigation (2026-11-06)
+
+The two-node workflow run `42120978922` successfully cloned the pinned source, applied the patch, configured CMake and compiled the wallet-enabled daemon/CLI. Both daemon invocations printed `Bitcoin Core starting`, but the script's RPC readiness loop timed out after 40 seconds. The previous workflow daemonized immediately and suppressed all bitcoin-cli errors; it did not preserve or print either node's `debug.log`, so that run does **not** reveal the underlying startup failure.
+
+The test harness is corrected to use `-daemonwait=1` so daemon initialization failures are returned synchronously, enable debug logging, report the last bitcoin-cli error, and dump each node's debug log if RPC is still unavailable. This is a diagnostics fix; the underlying RPC cause and the functional tests remain unverified until the next CI run.
