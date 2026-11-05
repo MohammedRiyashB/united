@@ -70,6 +70,8 @@ jobs:
           rpc_pass="ci-secret"
           rpc1=(-chain=unitedregtest -datadir="$node1" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29443)
           rpc2=(-chain=unitedregtest -datadir="$node2" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29453)
+          wallet1=("${rpc1[@]}" -rpcwallet=united-miner)
+          wallet2=("${rpc2[@]}" -rpcwallet=united-recipient)
           cleanup() {
             "$cli" "${rpc2[@]}" stop >/dev/null 2>&1 || true
             "$cli" "${rpc1[@]}" stop >/dev/null 2>&1 || true
@@ -99,14 +101,14 @@ jobs:
 
           "$cli" "${rpc1[@]}" createwallet "united-miner"
           "$cli" "${rpc2[@]}" createwallet "united-recipient"
-          address1="$("$cli" "${rpc1[@]}" getnewaddress)"
-          address2="$("$cli" "${rpc2[@]}" getnewaddress)"
+          address1="$("$cli" "${wallet1[@]}" getnewaddress)"
+          address2="$("$cli" "${wallet2[@]}" getnewaddress)"
 
           # Coinbase maturity: mine 101 blocks before spending.
           "$cli" "${rpc1[@]}" generatetoaddress 101 "$address1" >/dev/null
           mined="$("$cli" "${rpc1[@]}" getblockcount)"
           test "$mined" -eq 101
-          balance1="$("$cli" "${rpc1[@]}" getbalance)"
+          balance1="$("$cli" "${wallet1[@]}" getbalance)"
           awk -v b="$balance1" 'BEGIN { exit !(b >= 50.0) }'
 
           # Establish an actual TCP P2P connection between two independent nodes.
@@ -119,7 +121,7 @@ jobs:
           done
           test "$peer_count" -ge 1
 
-          txid="$("$cli" "${rpc1[@]}" sendtoaddress "$address2" 1.0)"
+          txid="$("$cli" "${wallet1[@]}" sendtoaddress "$address2" 1.0)"
           test -n "$txid"
           "$cli" "${rpc1[@]}" generatetoaddress 1 "$address1" >/dev/null
 
@@ -131,7 +133,7 @@ jobs:
             sleep 1
           done
           test "$synced" -eq 1
-          received="$("$cli" "${rpc2[@]}" getbalance)"
+          received="$("$cli" "${wallet2[@]}" getbalance)"
           awk -v b="$received" 'BEGIN { exit !(b >= 1.0) }'
           "$cli" "${rpc1[@]}" getblockchaininfo
           "$cli" "${rpc2[@]}" getblockchaininfo
