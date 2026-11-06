@@ -33,7 +33,8 @@ The exact scheduled subsidy issuance after smallest-unit integer halving is **20
 | Private `unitedregtest` chain parameters/genesis | Implemented; two-node mining/wallet/transaction/P2P CI passed (run 42157048924) |
 | Bitcoin Core-derived full-node daemon/CLI | Native daemon/CLI builds in CI; private regtest functional run passed |
 | Private-regtest mining, wallet, transaction, P2P | Two-node end-to-end CI passed |
-| Public `unitedtestnet` chain parameters/genesis | Candidate implemented in separate branch; native CI pending |\n| Public testnet seed nodes/release artifacts | Not deployed; manual `-addnode` only in candidate build |
+| Public `unitedtestnet` chain parameters/genesis | Candidate implemented in separate branch; native CI pending |
+| Public testnet seed nodes/release artifacts | Not deployed; manual `-addnode` only in candidate build |
 | Mainnet chain parameters/genesis | Not implemented |
 | Mobile / desktop wallet release | Not implemented |
 | Explorer / indexer / API | Contract draft only; not implemented |
