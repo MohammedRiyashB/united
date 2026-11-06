@@ -353,7 +353,7 @@ jobs:
           )
           archive="$RUNNER_TEMP/united-testnet-linux-x86_64-$GITHUB_SHA.tar.gz"
           tar -C "$dist" -czf "$archive" .
-          sha256sum "$archive" > "$archive.sha256"
+          (cd "$RUNNER_TEMP" && sha256sum "$(basename "$archive")" > "$(basename "$archive").sha256")
           mkdir -p release
           cp "$archive" "$archive.sha256" release/
       - name: Upload verified node bundle
