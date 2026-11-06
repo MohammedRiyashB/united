@@ -9,12 +9,27 @@ rpc_port = 0
 address_hrp = "UNSET"
 seed_nodes = []
 
+# Candidate public-testnet values only; not active until native integration and review.
 [testnet]
-name = "UNITED Testnet"
-message_start = "UNSET"
-p2p_port = 0
-rpc_port = 0
-address_hrp = "UNSET"
+name = "UNITED Public Testnet (candidate)"
+chain = "unitedtestnet"
+message_start = "faceb502"
+p2p_port = 39444
+rpc_port = 39443
+address_hrp = "tunit"
+base58_pubkey_prefix = 67
+base58_script_prefix = 68
+base58_secret_prefix = 194
+pow_limit = "00000fffff000000000000000000000000000000000000000000000000000000"
+target_spacing_seconds = 600
+target_timespan_seconds = 1209600
+allow_min_difficulty_blocks = true
+no_retargeting = false
+genesis_time = 1735689600
+genesis_nonce = 1129160
+genesis_bits = "1e0fffff"
+genesis_merkle_root = "3184f943619d506bdc6af367ba93346790766eaa244fdff3989df0a020975256"
+genesis_hash = "00000f7003bea5babbc9b271415f351472e51edd3d34e798214f6734b8d27da9"
 seed_nodes = []
 
 [regtest]

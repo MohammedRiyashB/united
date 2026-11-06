@@ -1,6 +1,6 @@
 # UNITED Public Testnet Go/No-Go Checklist
 
-**Current decision: NO-GO.** The repository currently implements a private development regtest only. This checklist defines the evidence required before announcing or distributing a public UNITED testnet.
+**Current decision: NO-GO.** A candidate public-testnet specification and deterministic genesis verifier now exist on PR #9, but the candidate chain type is not yet integrated into the native node and no public bootstrap peers or release artifacts exist. This checklist defines the evidence required before announcing or distributing a public UNITED testnet.
 
 Testnet coins must be clearly labelled as valueless. Do not accept deposits, sell testnet coins, promise returns, or reuse any mainnet keys, addresses, data directories or credentials.
 
@@ -9,8 +9,9 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 - [ ] Publish and freeze a reviewed public-testnet consensus specification.
 - [ ] Decide and document the public-testnet PoW limit, target spacing/timespan, retarget algorithm, minimum-difficulty behavior and timestamp rules.
 - [ ] Review coinbase maturity, subsidy schedule, money range, block weight and script/transaction activation settings in native C++ code.
-- [ ] Generate a testnet-only genesis coinbase and block header deterministically; independently reproduce the exact bytes, Merkle root and SHA-256d hash.
-- [ ] Select collision-checked four-byte message magic, P2P/RPC ports, Base58 prefixes and Bech32/Bech32m HRP.
+- [x] Generate a candidate testnet-only genesis coinbase and block header deterministically; independently reproduce the Merkle root and SHA-256d hash with `scripts/verify-public-testnet-genesis.py`.
+- [ ] Embed the candidate genesis in native C++ chain parameters and verify the same hash through the compiled daemon RPC.
+- [ ] Independently collision-check and approve the candidate four-byte message magic, P2P/RPC ports, Base58 prefixes and Bech32/Bech32m HRP.
 - [ ] Configure independent testnet chain type and data directory. Verify mainnet, testnet and private regtest data cannot be confused.
 - [ ] Add positive and negative native consensus vectors, including invalid PoW, invalid compact targets, future timestamps, retarget boundaries, subsidy/money boundaries, invalid scripts, invalid transactions and reorgs.
 - [ ] Verify wrong-network nodes reject UNITED testnet blocks and addresses.
@@ -53,7 +54,8 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 - [ ] Latest corrected genesis timestamp/nonce patch passes a fresh full native CI run.
 - [ ] Two-node mining, wallet, transaction and P2P functional CI passes.
 - [ ] Full upstream and UNITED-specific consensus/security test suites pass.
-- [ ] Public-testnet parameters, genesis, seeds and release artifacts exist.
+- [x] Candidate public-testnet parameters and genesis are documented on draft PR #9; not yet native-integrated or approved.
+- [ ] Public bootstrap seeds, independent operators and release artifacts exist.
 - [ ] Independent operator and security reviews are complete.
 
 A green CI job for private regtest is necessary but not sufficient to release a public testnet.
