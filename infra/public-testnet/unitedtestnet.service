@@ -8,7 +8,7 @@ Type=simple
 User=united
 Group=united
 ExecStart=/usr/local/bin/bitcoind -chain=unitedtestnet -datadir=/var/lib/unitedtestnet -conf=/etc/united/unitedtestnet.conf -daemon=0
-ExecStop=/usr/local/bin/bitcoin-cli -chain=unitedtestnet -datadir=/var/lib/unitedtestnet stop
+ExecStop=/usr/local/bin/bitcoin-cli -conf=/etc/united/unitedtestnet.conf -chain=unitedtestnet -datadir=/var/lib/unitedtestnet stop
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=120
