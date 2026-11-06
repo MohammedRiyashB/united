@@ -174,7 +174,7 @@ function renderPhrase(phrase) {
   const words=phrase.split(" ");
   pageShell(`
     <div class="uw-flow-page">
-      <header class="uw-flow-header">${backButton("create")}<span class="uw-step-label">BACKUP YOUR WALLET · 1/2</span></header>
+      <header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">BACKUP YOUR WALLET · 1/2</span></header>
       <h1>Secret recovery phrase</h1>
       <p class="uw-subtitle">Write these words down in the correct order and store them somewhere private. Anyone with this phrase can access your wallet.</p>
       <div class="uw-warning"><b>Never share your recovery phrase.</b><span>UNITED support will never ask you to reveal it.</span></div>
@@ -352,7 +352,9 @@ function renderSettings() {
       </div>
     </div>`);
   bindBack("dashboard");
+  $("google-connect").textContent=window.unitedAccountConnected?"Connected":"Connect";
   $("google-connect").onclick=()=>window.dispatchEvent(new Event("united-google-connect"));
+  window.addEventListener("united-account-state",e=>{const button=$("google-connect");if(button)button.textContent=e.detail.connected?"Connected":"Connect";});
   $("rename-wallet").onclick=()=>{const n=prompt("New wallet name",activeWallet.name);if(n?.trim()){activeWallet.name=n.trim();saveVault(unlockedPassword).then(renderSettings);}};
   $("backup-action").onclick=backupFlow;
   $("export-wallet").onclick=()=>downloadBackup();
