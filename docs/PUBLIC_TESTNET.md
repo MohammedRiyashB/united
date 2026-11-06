@@ -65,14 +65,14 @@ DATADIR="$HOME/.unitedtestnet"
 Start with one or more independently verified peers:
 
 ```bash
-"$BIN/bitcoind" -chain=unitedtestnet -datadir="$DATADIR" \\
+"$BIN/bitcoind" -chain=unitedtestnet -datadir="$DATADIR" \
   -addnode="<verified-peer-ip>:29555" -daemonwait=1
 ```
 
 Or add a peer after startup:
 
 ```bash
-"$BIN/bitcoin-cli" -chain=unitedtestnet -datadir="$DATADIR" \\
+"$BIN/bitcoin-cli" -chain=unitedtestnet -datadir="$DATADIR" \
   addnode "<verified-peer-ip>:29555" "onetry"
 ```
 
