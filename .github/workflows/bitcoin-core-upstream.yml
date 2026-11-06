@@ -23,9 +23,17 @@ permissions:
 
 jobs:
   native-united-regtest:
-    name: Clone, patch, compile and smoke-test UNITED regtest
-    runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    name: Clone, patch, compile and smoke-test UNITED (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
     steps:
       - name: Checkout UNITED integration branch
         uses: actions/checkout@v4
@@ -320,7 +328,7 @@ jobs:
       - name: Record compiled binaries
         run: |
           find upstream/build/bin -maxdepth 1 -type f -printf '%f\n' | sort
-      - name: Package verified UNITED testnet node (Ubuntu 24.04 x86_64)
+      - name: Package verified UNITED testnet node (Ubuntu 24.04 ${{ matrix.arch }})
         shell: bash
         run: |
           set -euo pipefail
@@ -340,7 +348,7 @@ jobs:
           Repository: $GITHUB_REPOSITORY
           Source commit: $GITHUB_SHA
           Upstream: Bitcoin Core v32.1 (see core/upstream.lock.toml)
-          Platform: Ubuntu 24.04 x86_64
+          Platform: Ubuntu 24.04 ${{ matrix.arch }}
           Chain: unitedtestnet
           P2P port: 29446/tcp
           RPC port: 29447/tcp (loopback only; do not expose)
@@ -352,7 +360,7 @@ jobs:
             find bin etc lib docs share -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
             sha256sum install-node.sh LICENSE BUILD-METADATA.txt >> SHA256SUMS
           )
-          archive="$RUNNER_TEMP/united-testnet-linux-x86_64-$GITHUB_SHA.tar.gz"
+          archive="$RUNNER_TEMP/united-testnet-linux-${{ matrix.arch }}-$GITHUB_SHA.tar.gz"
           tar -C "$dist" -czf "$archive" .
           (cd "$RUNNER_TEMP" && sha256sum "$(basename "$archive")" > "$(basename "$archive").sha256")
           mkdir -p release
@@ -360,9 +368,9 @@ jobs:
       - name: Upload verified node bundle
         uses: actions/upload-artifact@v4
         with:
-          name: united-testnet-linux-x86_64-${{ github.sha }}
+          name: united-testnet-linux-${{ matrix.arch }}-${{ github.sha }}
           path: |
-            ${{ runner.temp }}/united-testnet-linux-x86_64-${{ github.sha }}.tar.gz
-            ${{ runner.temp }}/united-testnet-linux-x86_64-${{ github.sha }}.tar.gz.sha256
+            ${{ runner.temp }}/united-testnet-linux-${{ matrix.arch }}-${{ github.sha }}.tar.gz
+            ${{ runner.temp }}/united-testnet-linux-${{ matrix.arch }}-${{ github.sha }}.tar.gz.sha256
           if-no-files-found: error
           retention-days: 30
