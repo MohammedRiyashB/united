@@ -1,0 +1,217 @@
+diff --git a/src/util/chaintype.h b/src/util/chaintype.h
+index 0000000..0000000 100644
+--- a/src/util/chaintype.h
++++ b/src/util/chaintype.h
+@@ -15,6 +15,7 @@ enum class ChainType {
+     REGTEST,
+     TESTNET4,
+     UNITEDREGTEST,
++    UNITEDTESTNET,
+ };
+ 
+ std::string ChainTypeToString(ChainType chain);
+diff --git a/src/util/chaintype.cpp b/src/util/chaintype.cpp
+index 0000000..0000000 100644
+--- a/src/util/chaintype.cpp
++++ b/src/util/chaintype.cpp
+@@ -24,6 +24,8 @@ std::string ChainTypeToString(ChainType chain)
+     case ChainType::UNITEDREGTEST:
+         return "unitedregtest";
++    case ChainType::UNITEDTESTNET:
++        return "unitedtestnet";
+     }
+     assert(false);
+ }
+@@ -41,6 +43,8 @@ std::optional<ChainType> ChainTypeFromString(std::string_view chain)
+     } else if (chain == "unitedregtest") {
+         return ChainType::UNITEDREGTEST;
++    } else if (chain == "unitedtestnet") {
++        return ChainType::UNITEDTESTNET;
+     } else {
+         return std::nullopt;
+     }
+diff --git a/src/chainparamsbase.h b/src/chainparamsbase.h
+index 0000000..0000000 100644
+--- a/src/chainparamsbase.h
++++ b/src/chainparamsbase.h
+@@ -38,1 +38,1 @@ void SelectBaseParams(ChainType chain);
+-#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest, unitedregtest"
++#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest, unitedregtest, unitedtestnet"
+diff --git a/src/chainparamsbase.cpp b/src/chainparamsbase.cpp
+index 0000000..0000000 100644
+--- a/src/chainparamsbase.cpp
++++ b/src/chainparamsbase.cpp
+@@ -75,6 +75,8 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
+     case ChainType::UNITEDREGTEST:
+         return std::make_unique<CBaseChainParams>("unitedregtest", 29443);
++    case ChainType::UNITEDTESTNET:
++        return std::make_unique<CBaseChainParams>("unitedtestnet", 29447);
+     }
+     assert(false);
+ }
+diff --git a/src/kernel/chainparams.h b/src/kernel/chainparams.h
+index 0000000..0000000 100644
+--- a/src/kernel/chainparams.h
++++ b/src/kernel/chainparams.h
+@@ -157,6 +157,8 @@ public:
+     static std::unique_ptr<const CChainParams> UnitedRegTest(const RegTestOptions& options);
+     static std::unique_ptr<const CChainParams> UnitedRegTest() { const RegTestOptions opts{}; return UnitedRegTest(opts); }
++    static std::unique_ptr<const CChainParams> UnitedTestNet(const TestNetOptions& options);
++    static std::unique_ptr<const CChainParams> UnitedTestNet() { const TestNetOptions opts{}; return UnitedTestNet(opts); }
+     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
+diff --git a/src/chainparams.cpp b/src/chainparams.cpp
+index 0000000..0000000 100644
+--- a/src/chainparams.cpp
++++ b/src/chainparams.cpp
+@@ -134,6 +134,11 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const ChainType chain)
+         ReadRegTestArgs(args, opts);
+         return CChainParams::UnitedRegTest(opts);
+     }
++    case ChainType::UNITEDTESTNET: {
++        auto opts = CChainParams::TestNetOptions{};
++        ReadTestNetArgs(args, opts);
++        return CChainParams::UnitedTestNet(opts);
++    }
+     }
+     assert(false);
+ }
+diff --git a/src/common/args.cpp b/src/common/args.cpp
+index 0000000..0000000 100644
+--- a/src/common/args.cpp
++++ b/src/common/args.cpp
+@@ -157,6 +157,7 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
+         ChainTypeToString(ChainType::TESTNET),
+         ChainTypeToString(ChainType::TESTNET4),
++        ChainTypeToString(ChainType::UNITEDTESTNET),
+         ChainTypeToString(ChainType::MAIN),
+diff --git a/src/kernel/chainparams.cpp b/src/kernel/chainparams.cpp
+index 0000000..0000000 100644
+--- a/src/kernel/chainparams.cpp
++++ b/src/kernel/chainparams.cpp
+@@ -486,6 +486,70 @@ class CTestNet4Params : public CChainParams {
+         };
+     }
+ };
+ 
++/**
++ * UNITED public test network.
++ *
++ * This is a public-facing, valueless test network. It inherits Bitcoin Core
++ * testnet4 activation mechanics, but has independent chain identity, genesis,
++ * address encodings and an independently chosen PoW limit. No historical
++ * Bitcoin checkpoints, assume-valid hashes, snapshots or seed nodes are used.
++ */
++class CUnitedTestNetParams : public CTestNet4Params
++{
++public:
++    explicit CUnitedTestNetParams(const TestNetOptions& opts) : CTestNet4Params(opts)
++    {
++        m_chain_type = ChainType::UNITEDTESTNET;
++
++        // UNITED monetary policy and Bitcoin-style 10-minute difficulty schedule.
++        consensus.nSubsidyHalvingInterval = 210000;
++        consensus.BIP34Height = 1;
++        consensus.BIP34Hash = uint256{};
++        consensus.BIP65Height = 1;
++        consensus.BIP66Height = 1;
++        consensus.CSVHeight = 1;
++        consensus.SegwitHeight = 1;
++        consensus.MinBIP9WarningHeight = 0;
++        consensus.powLimit = uint256{"000fffff00000000000000000000000000000000000000000000000000000000"};
++        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60;
++        consensus.nPowTargetSpacing = 10 * 60;
++        consensus.fPowAllowMinDifficultyBlocks = true;
++        consensus.enforce_BIP94 = true;
++        consensus.fPowNoRetargeting = false;
++
++        // No Bitcoin testnet chainwork, assume-valid point or UTXO snapshots.
++        consensus.nMinimumChainWork = uint256{};
++        consensus.defaultAssumeValid = uint256{};
++        m_assumeutxo_data.clear();
++
++        pchMessageStart[0] = 0xfa;
++        pchMessageStart[1] = 0xb1;
++        pchMessageStart[2] = 0xd0;
++        pchMessageStart[3] = 0x02;
++        nDefaultPort = 29446;
++        nPruneAfterHeight = 1000;
++        m_assumed_blockchain_size = 0;
++        m_assumed_chain_state_size = 0;
++
++        const char* united_testnet_genesis_msg = "UNITED PUBLIC TESTNET GENESIS 2026-11-06";
++        const CScript united_testnet_genesis_script = CScript() << OP_RETURN << "554e49544544205055424c494320544553544e4554"_hex;
++        genesis = CreateGenesisBlock(
++            united_testnet_genesis_msg,
++            united_testnet_genesis_script,
++            1700000001,
++            60,
++            0x1f0fffff,
++            1,
++            50 * COIN);
++        consensus.hashGenesisBlock = genesis.GetHash();
++        assert(consensus.hashGenesisBlock == uint256{"00057ebf90a85fff3a45bd543a266d8ed59bc76ee3aadab4fc216416582686d0"});
++        assert(genesis.hashMerkleRoot == uint256{"d913e5cf8a09ccf5d4382c4a1e78d8e8b62c9bc0538240c05b26e2baa1d35446"});
++
++        // No public DNS seed operators or fixed peers have been commissioned yet.
++        vSeeds.clear();
++        vFixedSeeds.clear();
++
++        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 75);
++        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 76);
++        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 203);
++        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x55, 0x4e, 0x54};
++        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x55, 0x4e, 0x55};
++        bech32_hrp = "tunit";
++
++        fDefaultConsistencyChecks = false;
++        m_is_mockable_chain = false;
++        chainTxData = ChainTxData{.nTime = 0, .tx_count = 0, .dTxRate = 0.001};
++        m_headers_sync_params = HeadersSyncParams{
++            .commitment_period = 616,
++            .redownload_buffer_size = 16199,
++        };
++    }
++};
++
+ std::unique_ptr<const CChainParams> CChainParams::SigNet(const SigNetOptions& options)
+ {
+     return std::make_unique<const SigNetParams>(options);
+@@ -714,6 +778,11 @@ std::unique_ptr<const CChainParams> CChainParams::UnitedRegTest(const RegTestOptions& options)
+ {
+     return std::make_unique<const CUnitedRegTestParams>(options);
+ }
+ 
++std::unique_ptr<const CChainParams> CChainParams::UnitedTestNet(const TestNetOptions& options)
++{
++    return std::make_unique<const CUnitedTestNetParams>(options);
++}
++
+ std::unique_ptr<const CChainParams> CChainParams::Main(const MainNetOptions& options)
+ {
+     return std::make_unique<const CMainParams>(options);
+@@ -752,6 +821,7 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
+     const auto signet_msg = CChainParams::SigNet()->MessageStart();
+     const auto unitedregtest_msg = CChainParams::UnitedRegTest()->MessageStart();
++    const auto unitedtestnet_msg = CChainParams::UnitedTestNet()->MessageStart();
+ 
+     if (std::ranges::equal(message, mainnet_msg)) {
+         return ChainType::MAIN;
+@@ -764,6 +834,8 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
+     } else if (std::ranges::equal(message, unitedregtest_msg)) {
+         return ChainType::UNITEDREGTEST;
++    } else if (std::ranges::equal(message, unitedtestnet_msg)) {
++        return ChainType::UNITEDTESTNET;
+     }
+     return std::nullopt;
+ }
+diff --git a/src/bitcoin-cli.cpp b/src/bitcoin-cli.cpp
+index 0000000..0000000 100644
+--- a/src/bitcoin-cli.cpp
++++ b/src/bitcoin-cli.cpp
+@@ -443,6 +443,8 @@
+         case ChainType::UNITEDREGTEST:
+             return " unitedregtest";
++        case ChainType::UNITEDTESTNET:
++            return " unitedtestnet";
+         case ChainType::MAIN:
+             return "";
