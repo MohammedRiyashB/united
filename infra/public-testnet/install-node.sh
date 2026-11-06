@@ -32,7 +32,7 @@ cd "$work"
 }
 sha256sum --strict --check SHA256SUMS
 
-for required in bin/bitcoind bin/bitcoin-cli etc/united/unitedtestnet.conf.example lib/systemd/system/unitedtestnet.service; do
+for required in bin/bitcoind bin/bitcoin-cli etc/united/unitedtestnet.conf.example lib/systemd/system/unitedtestnet.service share/united/testnet-cpu-miner.py; do
   [[ -s "$required" ]] || {
     echo "ERROR: bundle is missing $required" >&2
     exit 1
@@ -58,6 +58,8 @@ install -d -o root -g united -m 0750 /etc/united
 install -d -o united -g united -m 0750 /var/lib/unitedtestnet
 install -m 0755 bin/bitcoind /usr/local/bin/bitcoind
 install -m 0755 bin/bitcoin-cli /usr/local/bin/bitcoin-cli
+install -d -o root -g root -m 0755 /usr/local/libexec/united
+install -m 0755 share/united/testnet-cpu-miner.py /usr/local/libexec/united/testnet-cpu-miner.py
 install -m 0644 lib/systemd/system/unitedtestnet.service /etc/systemd/system/unitedtestnet.service
 
 rpc_user="united-$(openssl rand -hex 8)"
