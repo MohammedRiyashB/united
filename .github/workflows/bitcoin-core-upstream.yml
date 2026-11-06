@@ -54,7 +54,9 @@ jobs:
           cd upstream
           git apply --check ../core/patches/0001-add-united-regtest.patch
           git apply ../core/patches/0001-add-united-regtest.patch
-          git apply --check ../core/patches/0002-add-united-public-testnet.patch
+          echo "===== chainparams.cpp after private-regtest patch ====="
+          nl -ba src/kernel/chainparams.cpp | sed -n '800,840p'
+          git apply --verbose --check ../core/patches/0002-add-united-public-testnet.patch
           git apply ../core/patches/0002-add-united-public-testnet.patch
       - name: Independently verify public-testnet genesis
         run: python3 scripts/verify-united-testnet-genesis.py
