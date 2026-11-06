@@ -153,7 +153,7 @@ jobs:
           address2="$("$cli" "${wallet2[@]}" getnewaddress)"
 
           # Coinbase maturity: mine 101 blocks before spending.
-          "$cli" "${rpc1[@]}" generatetoaddress 101 "$address1" >/dev/null
+          "$cli" "${rpc1[@]}" generatetoaddress 101 "$address1" 30000000 >/dev/null
           mined="$("$cli" "${rpc1[@]}" getblockcount)"
           test "$mined" -eq 101
           balance1="$("$cli" "${wallet1[@]}" getbalance)"
