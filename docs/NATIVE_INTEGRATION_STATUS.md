@@ -1,74 +1,52 @@
 # UNITED native Bitcoin Core integration status
 
-**Active test branch:** `integration/united-regtest-functional-tests`  
-**Upstream:** Bitcoin Core `v32.1` pinned to the reviewed commit in `core/upstream.lock.toml`.
+**Active branch:** `integration/united-regtest-functional-tests`  
+**Upstream:** Bitcoin Core `v32.1`, pinned in `core/upstream.lock.toml`.
 
-## Verified milestone: native private regtest build
+## Verified baseline
 
-GitHub Actions run `42119554863` completed successfully. Its job passed all ten steps:
-- clone pinned upstream;
-- verify exact tag object and commit;
-- apply UNITED C++ patch;
-- configure CMake;
-- compile native daemon and CLI;
-- start `unitedregtest`;
-- query and verify genesis block hash over RPC.
+GitHub Actions run [42119554863](https://github.com/MohammedRiyashB/united/actions/runs/42119554863) passed the native private-regtest smoke test: pinned-source verification, patch application, CMake configuration, daemon/CLI compilation, daemon startup and genesis RPC check.
 
-Expected private-regtest genesis hash:
-`2739e631581bbb86a9dfe9827c2ba84ff1ca53a96e0fbaa809784b351540c44a`
+This was a **private development regtest** verification only.
 
-Expected genesis Merkle root:
-`a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7`
+## Latest functional-test failure: root cause found
 
-This proves a working **private development regtest** only. It does not prove a public network, production consensus readiness, or mainnet launch.
+Run [42155142254](https://github.com/MohammedRiyashB/united/actions/runs/42155142254) showed:
 
-## Next validation added in this branch
+- Native wallet-enabled daemon and CLI compilation succeeded.
+- Both UNITED regtest nodes initialized successfully.
+- Both wallets were created.
+- The first mining call failed with `TestBlockValidity failed: time-too-new, block timestamp too far in the future`.
 
-The CI workflow is expanded to build wallet support and exercise two independent UNITED regtest nodes:
-1. Start two nodes with separate data directories and RPC/P2P ports.
-2. Verify both nodes report the expected genesis block.
-3. Create separate wallets and addresses.
-4. Mine 101 blocks and check coinbase maturity and miner balance.
-5. Establish a TCP P2P connection between the nodes.
-6. Send a wallet transaction from node 1 to node 2.
-7. Mine a confirmation block and verify node 2 syncs and its wallet receives the funds.
+The cause was the private-regtest genesis timestamp `1794000000`, which is **2026-11-06 21:20:00 UTC**. The GitHub Actions runner was executing at approximately **2026-11-06 03:23 UTC**, making the genesis timestamp about 18 hours ahead of the node's adjusted clock. The genesis block itself could be loaded, but the first child blocks could not pass timestamp validation. This was not a wallet-creation or P2P-port failure.
 
-These are automated test intentions until the new workflow run passes. Do not mark mining, wallet, transaction or P2P validation complete before seeing that result.
+## Corrective changes committed
 
-## Remaining production gates
+- Set the private-regtest genesis timestamp to the fixed historical value `1700000000` (2023-11-14 22:13:20 UTC), avoiding a clock-dependent future genesis.
+- Set the genesis nonce to `1` and recalculated its header hash using SHA-256d. The resulting hash is `6d8278642c6e1390286c74bd2697c5251771e9da1b860a5bd3d692b5d0ead151`; the Merkle root remains `a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7`.
+- Updated the CI genesis assertion to the new hash.
+- Added the `UNITEDREGTEST` display case to Bitcoin Core's `bitcoin-cli -netinfo` chain label switch, removing the compiler's unhandled-enum warning.
+- Removed the fake `.invalid` DNS seed from this private network; the seed list remains empty.
 
-- Add native unit and functional tests for monetary subsidy, maximum money, fee and overflow boundaries, difficulty retargeting, timestamp rules, script validation and reorg behavior.
-- Define separate public testnet and mainnet chain parameters with collision-checked network magic, ports, address prefixes, HRPs, genesis and seed infrastructure.
-- Freeze activation schedules and consensus parameters only after documented review and independent test vectors.
-- Build reproducible release binaries and secure signing/release procedures.
-- Operate a public testnet with multiple independent operators and a sustained soak period.
-- Commission independent consensus, cryptography, networking, wallet and operational security audits; publish findings and remediate them.
+**Validation state:** these changes require a fresh CI run. Mining, P2P propagation, transaction confirmation and wallet balance checks remain unverified until that run passes.
 
-## Mainnet safety
+## Functional test sequence
 
-The current private regtest deliberately uses an easy PoW target, minimum-difficulty allowance and disabled retargeting. These settings must never be copied to mainnet. The draft monetary schedule targets a nominal 21,000,000 UNITED cap (integer subsidy schedule totals 20,999,999.97690000 UNITED). Mainnet genesis and production PoW limit are not yet defined.
+The CI job is designed to exercise two independent nodes with isolated data directories and loopback ports. It verifies matching genesis hashes, creates separate wallets, mines 101 blocks, checks coinbase maturity and miner balance, establishes a TCP P2P connection, sends 1 UNITED, mines a confirmation block, then checks node synchronization and recipient balance.
 
-No mainnet launch, public token sale, custody of user funds, or exchange listing is authorized by this engineering branch.
+## Public testnet is the next distinct release stage
 
-## RPC startup failure investigation (2026-11-06)
+The private `unitedregtest` network is not a public testnet. Before public testnet release, the project still needs:
 
-The two-node workflow run `42120978922` successfully cloned the pinned source, applied the patch, configured CMake and compiled the wallet-enabled daemon/CLI. Both daemon invocations printed `Bitcoin Core starting`, but the script's RPC readiness loop timed out after 40 seconds. The previous workflow daemonized immediately and suppressed all bitcoin-cli errors; it did not preserve or print either node's `debug.log`, so that run does **not** reveal the underlying startup failure.
+- A separate public-testnet chain type with unique message magic, P2P/RPC ports, address prefixes and Bech32 HRP.
+- A deterministic public-testnet genesis block with independently verified SHA-256d proof of work and fixed consensus parameters.
+- Public bootstrap peers/DNS seeds or a documented safe initial peer-connection process; no usable public seeds are configured now.
+- Mainnet-independent testnet difficulty and timestamp rules, plus consensus test vectors and native tests for subsidy, money range, retargeting, reorgs, scripts and transaction validation.
+- Operator instructions, configuration examples, monitoring, release checksums/signatures and a public issue-reporting process.
+- A public testnet soak with multiple independent operators before treating the network as stable.
 
-The test harness is corrected to use `-daemonwait=1` so daemon initialization failures are returned synchronously, enable debug logging, report the last bitcoin-cli error, and dump each node's debug log if RPC is still unavailable. This is a diagnostics fix; the underlying RPC cause and the functional tests remain unverified until the next CI run.
+## Mainnet is not part of this testnet release
 
+The private regtest deliberately uses an easy PoW target, minimum-difficulty allowance and disabled retargeting. Those values must not be reused as production mainnet settings. The draft subsidy schedule totals `20,999,999.97690000 UNITED` under smallest-unit integer halving, with a nominal 21,000,000 UNITED cap. Production mainnet genesis, PoW limit, activation schedule, seed infrastructure and independent security/consensus audit are not complete.
 
-## Follow-up startup diagnostics (2026-11-06)
-
-GitHub Actions job `127578648991` (run `114141748682`) compiled the wallet-enabled node and then failed in the node-start step. Its console shows two `Bitcoin Core starting` messages followed by `Error during initialization - check debug.log for details`. The log does **not** contain the underlying cause: with Bash `set -e`, the failing `-daemonwait` command terminated the step before the existing `dump_diagnostics` function or RPC wait logic could execute. The job's temporary datadirs were subsequently cleaned up, so the missing debug log cannot be recovered from that run.
-
-The workflow now wraps each daemon startup in an explicit conditional, captures that node's startup output, and on failure prints the captured output plus the node's `debug.log` tail and both-node process/log diagnostics before returning the original exit status. The actual consensus/node startup cause is still not proven; it will be visible in the next run's failure output.
-
-## Two-node P2P port collision fix (2026-11-06)
-
-GitHub Actions run `42124020306`, job `127583425215`, compiled successfully and started node 1. Node 2 failed during initialization. Its `debug.log` shows the following sequence:
-
-- Node 1's P2P listener was configured for port `29444`.
-- Bitcoin Core's automatic PCP/NAT-PMP port mapping opened a local helper socket at `127.0.0.1:29445` (the next port).
-- Node 2 was configured to use P2P port `29445`, so its listener collided with that helper socket. The log reports `Unable to bind to 0.0.0.0:29445` and then `Failed to listen on any port`.
-
-The CI harness now disables automatic NAT-PMP mapping (`-natpmp=0`), external address discovery (`-discover=0`) and onion listening (`-listenonion=0`) for both isolated test nodes, and explicitly binds each node to its distinct loopback P2P endpoint (`127.0.0.1:29444` and `127.0.0.1:29445`). This removes an unnecessary router-mapping feature from the local two-node test while preserving the direct TCP P2P test. The next CI run must verify startup and the remaining mining/wallet/transaction/P2P assertions.
+Do not accept real funds, advertise this private regtest as a live public network, or describe UNITED mainnet as launched.
