@@ -48,12 +48,16 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 ## Current evidence
 
 - [x] Native private `unitedregtest` chain patch exists.
-- [x] Pinned Bitcoin Core v32.1 daemon/CLI compilation succeeded in prior CI.
-- [x] Private-regtest genesis hash was verified in the baseline smoke test.
-- [ ] Latest corrected genesis timestamp/nonce patch passes a fresh full native CI run.
-- [ ] Two-node mining, wallet, transaction and P2P functional CI passes.
+- [x] Private-regtest two-node mining, wallet, transaction and P2P CI passed (run `42157048924`).
+- [x] Public-testnet candidate chain type, identity, genesis and address encodings are implemented in branch `network/united-public-testnet`.
+- [x] Independent Python genesis verifier has been added.
+- [ ] Public-testnet patch applies cleanly and compiles in native CI.
+- [ ] Two-node public-testnet startup, genesis, address and P2P checks pass in native CI.
+- [ ] Public network magic, ports, HRP and address prefixes are checked for collisions by independent reviewers.
+- [ ] Multiple public seed/bootstrap hosts are deployed and reachable from external networks.
+- [ ] An independently operated miner or pool is deployed and can produce valid blocks.
+- [ ] Reproducible signed binaries, checksums, SBOM and install documentation are published.
 - [ ] Full upstream and UNITED-specific consensus/security test suites pass.
-- [ ] Public-testnet parameters, genesis, seeds and release artifacts exist.
 - [ ] Independent operator and security reviews are complete.
 
-A green CI job for private regtest is necessary but not sufficient to release a public testnet.
+**Current decision remains NO-GO for public announcement.** Local CI passing does not create publicly reachable nodes. The testnet may be called live only after independent external nodes can connect, produce valid blocks and remain synchronized.
