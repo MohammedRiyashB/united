@@ -40,7 +40,7 @@ index 1407f19..0000000 100644
  
  /** List of possible chain / network names  */
 -#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest"
-+#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest, unitedregtest"
++#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest, unitedregtest, unitedtestnet"
  
  #endif // BITCOIN_CHAINPARAMSBASE_H
 diff --git a/src/chainparamsbase.cpp b/src/chainparamsbase.cpp
