@@ -82,7 +82,7 @@ function formatUnits(value, decimals, maxFraction = 8) {
   return fraction ? whole.toString() + "." + fraction : whole.toString();
 }
 
-async function fetchJson(url, options = {}) {
+async function fetchResponse(url, options = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), RPC_TIMEOUT_MS);
   try {
@@ -91,17 +91,27 @@ async function fetchJson(url, options = {}) {
       signal: controller.signal,
       cache: "no-store",
       credentials: "omit",
-      headers: { "content-type": "application/json", ...(options.headers || {}) }
+      headers: { ...(options.method === "POST" ? { "content-type": "application/json" } : {}), ...(options.headers || {}) }
     });
     if (!response.ok) {
       const error = new Error("Network provider returned HTTP " + response.status + ".");
       error.status = response.status;
       throw error;
     }
-    return await response.json();
+    return response;
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function fetchJson(url, options = {}) {
+  const response = await fetchResponse(url, options);
+  return response.json();
+}
+
+async function fetchText(url, options = {}) {
+  const response = await fetchResponse(url, options);
+  return response.text();
 }
 
 async function rpc(url, method, params = []) {
@@ -131,7 +141,7 @@ export async function readNetworkState(networkId, address) {
       const confirmedSats = BigInt(data.chain_stats.funded_txo_sum) - BigInt(data.chain_stats.spent_txo_sum);
       const pendingSats = BigInt(data.mempool_stats.funded_txo_sum) - BigInt(data.mempool_stats.spent_txo_sum);
       const [height, txs] = await Promise.all([
-        fetchJson(network.api + "/blocks/tip/height"),
+        fetchText(network.api + "/blocks/tip/height"),
         fetchJson(network.api + "/address/" + encodeURIComponent(address) + "/txs")
       ]);
       return {
@@ -201,7 +211,7 @@ export async function verifyTransactionStatus(networkId, transactionId) {
   if (network.family === "utxo") {
     const [status, height] = await Promise.all([
       fetchJson(network.api + "/tx/" + encodeURIComponent(txid) + "/status"),
-      fetchJson(network.api + "/blocks/tip/height")
+      fetchText(network.api + "/blocks/tip/height")
     ]);
     const confirmations = status.confirmed ? Math.max(0, Number(height) - Number(status.block_height) + 1) : 0;
     return {
