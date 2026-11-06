@@ -13,7 +13,7 @@ if [[ "\${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
-for tool in tar sha256sum openssl systemctl install; do
+for tool in tar sha256sum openssl systemctl install runuser; do
   command -v "$tool" >/dev/null 2>&1 || {
     echo "ERROR: required command not found: $tool" >&2
     exit 1
@@ -91,8 +91,25 @@ chmod 0640 /etc/united/unitedtestnet.conf
 systemctl daemon-reload
 systemctl enable --now unitedtestnet.service
 
+actual_genesis=""
+for attempt in $(seq 1 30); do
+  actual_genesis="$(runuser -u united -- /usr/local/bin/bitcoin-cli \
+    -conf=/etc/united/unitedtestnet.conf -chain=unitedtestnet \
+    -datadir=/var/lib/unitedtestnet getblockhash 0 2>/dev/null || true)"
+  [[ "$actual_genesis" == "$expected_genesis" ]] && break
+  sleep 1
+done
+if [[ "$actual_genesis" != "$expected_genesis" ]]; then
+  echo "ERROR: node did not report the expected UNITED testnet genesis." >&2
+  echo "Expected: $expected_genesis" >&2
+  echo "Actual:   ${actual_genesis:-<no RPC response>}" >&2
+  journalctl -u unitedtestnet.service -n 80 --no-pager >&2 || true
+  systemctl stop unitedtestnet.service || true
+  exit 1
+fi
+
 echo
-echo "UNITED public-testnet node installed."
+echo "UNITED public-testnet node installed and genesis-verified."
 echo "Expected genesis: $expected_genesis"
 echo "Service: systemctl status unitedtestnet.service"
 echo "P2P listener: TCP 29446 (allow inbound at host and cloud firewall)."
