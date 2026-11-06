@@ -74,26 +74,47 @@ def compact_target(bits: int) -> int:
     return target
 
 
-def coinbase_transaction(height: int, value: int, script_pubkey: bytes, extra_nonce: int) -> bytes:
+def coinbase_transaction(
+    height: int,
+    value: int,
+    payout_script: bytes,
+    witness_commitment_script: bytes,
+    extra_nonce: int,
+) -> tuple[bytes, bytes]:
+    """Return (stripped serialization for txid, full witness serialization)."""
     script_sig = script_number(height) + push_data(struct.pack("<I", extra_nonce))
     if not 2 <= len(script_sig) <= 100:
         raise ValueError(f"coinbase scriptSig length out of range: {len(script_sig)}")
-    tx = (
-        struct.pack("<i", 2)
-        + b"\x01"
+    if len(witness_commitment_script) != 38 or not witness_commitment_script.startswith(
+        bytes.fromhex("6a24aa21a9ed")
+    ):
+        raise ValueError("getblocktemplate returned an invalid default witness commitment script")
+
+    vin = (
+        b"\\x01"
         + bytes(32)
         + struct.pack("<I", 0xFFFFFFFF)
         + compact_size(len(script_sig))
         + script_sig
         + struct.pack("<I", 0xFFFFFFFF)
-        + b"\x01"
-        + struct.pack("<q", value)
-        + compact_size(len(script_pubkey))
-        + script_pubkey
-        + struct.pack("<I", 0)
     )
-    return tx
+    outputs = (
+        b"\\x02"
+        + struct.pack("<q", value)
+        + compact_size(len(payout_script))
+        + payout_script
+        + struct.pack("<q", 0)
+        + compact_size(len(witness_commitment_script))
+        + witness_commitment_script
+    )
+    locktime = struct.pack("<I", 0)
+    stripped = struct.pack("<i", 2) + vin + outputs + locktime
 
+    # SegWit coinbase witness: one 32-byte reserved value. The witness
+    # commitment output is copied from getblocktemplate and checked below.
+    witness = b"\\x01\\x20" + bytes(32)
+    full = struct.pack("<i", 2) + b"\\x00\\x01" + vin + outputs + witness + locktime
+    return stripped, full
 
 def merkle_root(transactions: list[bytes]) -> bytes:
     if not transactions:
@@ -154,17 +175,26 @@ def mine_one(cli: BitcoinCLI, address: str, wallet: str, height_expected: int) -
 
     mempool_txs = template.get("transactions", [])
     raw_mempool: list[bytes] = []
-    leaves: list[bytes] = []
+    txid_leaves: list[bytes] = []
+    wtxid_leaves: list[bytes] = []
     for tx in mempool_txs:
-        if tx.get("txid") is None or tx.get("data") is None:
-            raise RuntimeError("template transaction is missing txid/data")
-        if tx.get("hash", tx["txid"]) != tx["txid"]:
+        if tx.get("txid") is None or tx.get("hash") is None or tx.get("data") is None:
+            raise RuntimeError("template transaction is missing txid/hash/data")
+        if tx["hash"] != tx["txid"]:
             raise RuntimeError(
                 "witness transactions are not supported by this minimal CI miner; "
-                "use legacy testnet addresses and an empty witness mempool"
+                "the test uses legacy inputs so the mempool should contain no witness txs"
             )
         raw_mempool.append(bytes.fromhex(tx["data"]))
-        leaves.append(bytes.fromhex(tx["txid"])[::-1])
+        txid_leaves.append(bytes.fromhex(tx["txid"])[::-1])
+        wtxid_leaves.append(bytes.fromhex(tx["hash"])[::-1])
+
+    witness_commitment_script = bytes.fromhex(template["default_witness_commitment"])
+    witness_root = merkle_root([bytes(32), *wtxid_leaves])
+    reserved_value = bytes(32)
+    expected_commitment = sha256d(witness_root + reserved_value)
+    if witness_commitment_script[6:] != expected_commitment:
+        raise RuntimeError("getblocktemplate witness commitment does not match the template transactions")
 
     bits = int(template["bits"], 16)
     target = compact_target(bits)
@@ -174,8 +204,10 @@ def mine_one(cli: BitcoinCLI, address: str, wallet: str, height_expected: int) -
     coinbase_value = int(template["coinbasevalue"])
 
     for extra_nonce in range(0, 1_000_000):
-        coinbase = coinbase_transaction(height, coinbase_value, script_pubkey, extra_nonce)
-        root = merkle_root([sha256d(coinbase), *leaves])
+        coinbase_txid_bytes, coinbase_full = coinbase_transaction(
+            height, coinbase_value, script_pubkey, witness_commitment_script, extra_nonce
+        )
+        root = merkle_root([sha256d(coinbase_txid_bytes), *txid_leaves])
         for time_value in range(block_time, block_time + 3600):
             prefix = (
                 struct.pack("<i", version)
@@ -190,7 +222,7 @@ def mine_one(cli: BitcoinCLI, address: str, wallet: str, height_expected: int) -
                     block = (
                         header
                         + compact_size(1 + len(raw_mempool))
-                        + coinbase
+                        + coinbase_full
                         + b"".join(raw_mempool)
                     )
                     result = cli.call("submitblock", block.hex())
