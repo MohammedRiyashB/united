@@ -94,7 +94,7 @@ index 0000000..0000000 100644
      }
  };
 +/**
-+ * UNITED public test network. This is a valueless network for public wallet,
++ * UNITED public test network candidate. This is a valueless network for public wallet,
 + * mining and P2P integration testing. Its difficulty is easier than mainnet,
 + * permits delayed-block minimum difficulty, but retains periodic retargeting.
 + * It has no bootstrap seeds configured; operators must connect using -addnode
