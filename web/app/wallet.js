@@ -405,9 +405,6 @@ function renderVaultUnlock() {
   $("unlock-form").onsubmit=async e=>{e.preventDefault();try{wallets=await loadVault($("vault-password").value);if(!wallets.length)throw new Error("No wallet found in this backup.");unlockedPassword=$("vault-password").value;activeWallet=wallets.find(w=>w.id===activeWalletId)||wallets[0];activeWalletId=activeWallet.id;renderDashboard();}catch(err){$("wallet-inline-error").textContent="Incorrect password or damaged local vault."; $("wallet-inline-error").hidden=false;}};
 }
 function renderDashboardIfUnlocked(){if(activeWallet)renderDashboard();else if(localStorage.getItem(KEY))renderVaultUnlock();else renderHome();}
-function setNotice(message,type="info") {
-  const el=$("wallet-notice");if(!el)return;el.textContent=message;el.dataset.type=type;el.hidden=!message;
-}
 export function mountUnitedWallet(user={uid:"device"}) {
   currentUser=user;
   // Wallets are device-local. Optional Google auth never moves private keys to cloud storage.
