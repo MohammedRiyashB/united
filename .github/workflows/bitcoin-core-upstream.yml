@@ -333,6 +333,7 @@ jobs:
           install -m 0644 scripts/testnet-cpu-miner.py "$dist/share/united/testnet-cpu-miner.py"
           install -m 0644 LICENSE "$dist/LICENSE"
           install -m 0644 docs/PUBLIC_TESTNET.md "$dist/docs/PUBLIC_TESTNET.md"
+          install -m 0644 docs/PUBLIC_TESTNET_MINING.md "$dist/docs/PUBLIC_TESTNET_MINING.md"
           cat > "$dist/BUILD-METADATA.txt" <<EOF
           UNITED Public Testnet candidate node bundle
           Repository: $GITHUB_REPOSITORY
