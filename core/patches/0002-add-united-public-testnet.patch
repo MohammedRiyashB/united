@@ -143,8 +143,8 @@ index 0000000..0000000 100644
 +        consensus.hashGenesisBlock = genesis.GetHash();
 +        assert(consensus.hashGenesisBlock == uint256{"00003b8e20fef32b7abc0c295c9bbce1931bc53f5688aeeb75301b997ba6bd00"});
 +        assert(genesis.hashMerkleRoot == uint256{"63ba230a57da664d056cb02ed1dc34bd83a0c774bc1c7421ac6474ad97cf82ff"});
-
-        vFixedSeeds.clear();
++
++        vFixedSeeds.clear();
 +        vSeeds.clear();
 +        fDefaultConsistencyChecks = false;
 +        m_is_mockable_chain = false;
