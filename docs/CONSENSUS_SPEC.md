@@ -102,6 +102,25 @@ Before mainnet: independent security/consensus audit, remediation and retest, a 
 - No UNITED mainnet coins exist. Do not accept funds or advertise an exchange listing.
 - No upstream binaries are being relabelled as UNITED binaries.
 
-## 8. Open values required before implementation can be called complete
+## 8. Current private-regtest implementation (not a public parameter set)
 
-The following are intentionally not guessed: mainnet and testnet `powLimit`, genesis parameters, P2P magic/ports, address prefixes/HRPs, initial script deployment schedule, DNS seeds, checkpoints, minimum chainwork, assume-valid policy, public testnet difficulty policy and final release versioning. These require collision checks, operator/security review and committed test vectors.
+The native integration branch now contains a separate `unitedregtest` chain type for local testing only:
+
+| Parameter | Private regtest value |
+|---|---|
+| Chain type | `unitedregtest` |
+| Initial subsidy / halving | 50 UNITED / 210,000 blocks |
+| Target spacing / timespan | 600 seconds / 1,209,600 seconds |
+| PoW limit and genesis bits | `7fff...ffff` / `0x207fffff` |
+| Minimum-difficulty exception | Enabled |
+| Automatic retargeting | Disabled |
+| Message magic | `fa b1 d0 01` |
+| Default P2P / RPC ports | 29444 / 29443 |
+| Address prefixes / HRP | private values; HRP `unitrt` |
+| Seed nodes | None |
+
+The private genesis is timestamp `1700000000`, nonce `1`, Merkle root `a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7`, and header hash `6d8278642c6e1390286c74bd2697c5251771e9da1b860a5bd3d692b5d0ead151`. These values are not suitable for a public testnet or mainnet. The public testnet and mainnet each need their own reviewed consensus and network parameters.
+
+## 9. Open values required before implementation can be called complete
+
+The following are intentionally not guessed for public testnet and mainnet: `powLimit`, genesis parameters, P2P magic/ports, address prefixes/HRPs, initial script deployment schedule, DNS seeds, checkpoints, minimum chainwork, assume-valid policy, public testnet difficulty policy and final release versioning. These require collision checks, operator/security review and committed test vectors.

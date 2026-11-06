@@ -26,7 +26,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build pkg-config python3 libevent-dev libboost-dev
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config python3 libevent-dev libboost-dev libsqlite3-dev
       - name: Clone Bitcoin Core source
         run: |
           git clone --no-checkout https://github.com/bitcoin/bitcoin.git upstream
@@ -54,31 +54,131 @@ jobs:
         run: |
           cmake -S upstream -B upstream/build -G Ninja \
             -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DBUILD_GUI=OFF \
-            -DBUILD_TX=OFF -DBUILD_UTIL=OFF -DENABLE_WALLET=OFF \
+            -DBUILD_TX=OFF -DBUILD_UTIL=OFF -DENABLE_WALLET=ON \
             -DENABLE_IPC=OFF -DENABLE_EXTERNAL_SIGNER=OFF \
             -DWITH_ZMQ=OFF -DWITH_USDT=OFF
       - name: Compile native daemon and CLI
         run: cmake --build upstream/build --parallel 2
-      - name: Start UNITED native regtest and verify genesis
+      - name: Start two UNITED nodes and verify genesis, mining, wallet, transactions and P2P
         shell: bash
         run: |
           set -euo pipefail
-          datadir="$(mktemp -d)"
+          cli="upstream/build/bin/bitcoin-cli"
+          daemon="upstream/build/bin/bitcoind"
+          node1="$(mktemp -d)"
+          node2="$(mktemp -d)"
+          rpc_user="unitedci"
+          rpc_pass="ci-secret"
+          rpc1=(-chain=unitedregtest -datadir="$node1" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29443)
+          rpc2=(-chain=unitedregtest -datadir="$node2" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29453)
+          wallet1=("${rpc1[@]}" -rpcwallet=united-miner)
+          wallet2=("${rpc2[@]}" -rpcwallet=united-recipient)
           cleanup() {
-            upstream/build/bin/bitcoin-cli -chain=unitedregtest -datadir="$datadir" -rpcuser=unitedci -rpcpassword=ci-secret stop >/dev/null 2>&1 || true
-            rm -rf "$datadir"
+            "$cli" "${rpc2[@]}" stop >/dev/null 2>&1 || true
+            "$cli" "${rpc1[@]}" stop >/dev/null 2>&1 || true
+            rm -rf "$node1" "$node2"
+          }
+          dump_diagnostics() {
+            echo "===== node1 process ====="
+            pgrep -af 'bitcoind.*unitedregtest' || true
+            echo "===== node1 debug.log ====="
+            find "$node1" -name debug.log -type f -print -exec tail -n 160 {} \; || true
+            echo "===== node2 debug.log ====="
+            find "$node2" -name debug.log -type f -print -exec tail -n 160 {} \; || true
           }
           trap cleanup EXIT
-          upstream/build/bin/bitcoind -chain=unitedregtest -datadir="$datadir" -daemon=1 -rpcuser=unitedci -rpcpassword=ci-secret
-          actual=""
+
+          # Capture startup output and dump debug.log on failure. With set -e,
+          # an unguarded daemonwait failure would exit before the diagnostics run.
+          start_node() {
+            local label="$1"
+            local datadir="$2"
+            local rpcport="$3"
+            local p2pport="$4"
+            local startup_log="$datadir/bitcoind-startup.log"
+            local status=0
+
+            echo "===== Starting ${label} (RPC ${rpcport}, P2P ${p2pport}) ====="
+            if "$daemon" -chain=unitedregtest -datadir="$datadir" \
+              -daemonwait=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" \
+              -rpcport="$rpcport" -port="$p2pport" -bind="127.0.0.1:$p2pport" \
+              -natpmp=0 -discover=0 -listenonion=0 \
+              -fallbackfee=0.0002 -debug=1 >"$startup_log" 2>&1; then
+              cat "$startup_log"
+              echo "===== ${label} initialized successfully ====="
+            else
+              status=$?
+              echo "===== ${label} failed during initialization (exit ${status}) =====" >&2
+              echo "===== ${label} startup output =====" >&2
+              cat "$startup_log" >&2 || true
+              echo "===== ${label} debug.log =====" >&2
+              find "$datadir" -type f -name debug.log -print -exec tail -n 240 {} \; >&2 || true
+              echo "===== All node diagnostics =====" >&2
+              dump_diagnostics
+              return "$status"
+            fi
+          }
+
+          start_node node1 "$node1" 29443 29444
+          start_node node2 "$node2" 29453 29445
+
+          wait_rpc() {
+            local -n args=$1
+            local last_error=""
+            for attempt in $(seq 1 90); do
+              if last_error="$("$cli" "${args[@]}" getblockchaininfo 2>&1)"; then return 0; fi
+              sleep 1
+            done
+            echo "RPC did not become ready; last bitcoin-cli error: $last_error" >&2
+            dump_diagnostics
+            return 1
+          }
+          wait_rpc rpc1
+          wait_rpc rpc2
+
+          expected="6d8278642c6e1390286c74bd2697c5251771e9da1b860a5bd3d692b5d0ead151"
+          actual="$("$cli" "${rpc1[@]}" getblockhash 0)"
+          test "$actual" = "$expected"
+          test "$("$cli" "${rpc2[@]}" getblockhash 0)" = "$expected"
+
+          "$cli" "${rpc1[@]}" createwallet "united-miner"
+          "$cli" "${rpc2[@]}" createwallet "united-recipient"
+          address1="$("$cli" "${wallet1[@]}" getnewaddress)"
+          address2="$("$cli" "${wallet2[@]}" getnewaddress)"
+
+          # Coinbase maturity: mine 101 blocks before spending.
+          "$cli" "${rpc1[@]}" generatetoaddress 101 "$address1" >/dev/null
+          mined="$("$cli" "${rpc1[@]}" getblockcount)"
+          test "$mined" -eq 101
+          balance1="$("$cli" "${wallet1[@]}" getbalance)"
+          awk -v b="$balance1" 'BEGIN { exit !(b >= 50.0) }'
+
+          # Establish an actual TCP P2P connection between two independent nodes.
+          "$cli" "${rpc1[@]}" addnode "127.0.0.1:29445" "onetry"
+          peer_count=0
           for attempt in $(seq 1 30); do
-            actual="$(upstream/build/bin/bitcoin-cli -chain=unitedregtest -datadir="$datadir" -rpcuser=unitedci -rpcpassword=ci-secret getblockhash 0 2>/dev/null || true)"
-            if [[ -n "$actual" ]]; then break; fi
+            peer_count="$("$cli" "${rpc1[@]}" getconnectioncount)"
+            if [[ "$peer_count" -ge 1 ]]; then break; fi
             sleep 1
           done
-          expected="2739e631581bbb86a9dfe9827c2ba84ff1ca53a96e0fbaa809784b351540c44a"
-          test "$actual" = "$expected"
-          upstream/build/bin/bitcoin-cli -chain=unitedregtest -datadir="$datadir" -rpcuser=unitedci -rpcpassword=ci-secret getblockchaininfo
+          test "$peer_count" -ge 1
+
+          txid="$("$cli" "${wallet1[@]}" sendtoaddress "$address2" 1.0)"
+          test -n "$txid"
+          "$cli" "${rpc1[@]}" generatetoaddress 1 "$address1" >/dev/null
+
+          # Wait for node 2 to receive the block and transaction over P2P.
+          synced=0
+          for attempt in $(seq 1 30); do
+            height2="$("$cli" "${rpc2[@]}" getblockcount)"
+            if [[ "$height2" -ge 102 ]]; then synced=1; break; fi
+            sleep 1
+          done
+          test "$synced" -eq 1
+          received="$("$cli" "${wallet2[@]}" getbalance)"
+          awk -v b="$received" 'BEGIN { exit !(b >= 1.0) }'
+          "$cli" "${rpc1[@]}" getblockchaininfo
+          "$cli" "${rpc2[@]}" getblockchaininfo
       - name: Record compiled binaries
         run: |
           find upstream/build/bin -maxdepth 1 -type f -printf '%f\n' | sort

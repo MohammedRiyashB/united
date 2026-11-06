@@ -87,7 +87,7 @@ diff --git a/src/kernel/chainparams.cpp b/src/kernel/chainparams.cpp
 index a071833..0000000 100644
 --- a/src/kernel/chainparams.cpp
 +++ b/src/kernel/chainparams.cpp
-@@ -617,6 +617,86 @@ class CRegTestParams : public CChainParams
+@@ -617,6 +617,85 @@ class CRegTestParams : public CChainParams
      }
  };
  
@@ -144,14 +144,13 @@ index a071833..0000000 100644
 +        genesis = CreateGenesisBlock(
 +            "UNITED experimental regtest genesis - not mainnet",
 +            CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG,
-+            1794000000, 0, 0x207fffff, 1, 50 * COIN);
++            1700000000, 1, 0x207fffff, 1, 50 * COIN);
 +        consensus.hashGenesisBlock = genesis.GetHash();
-+        assert(consensus.hashGenesisBlock == uint256{"2739e631581bbb86a9dfe9827c2ba84ff1ca53a96e0fbaa809784b351540c44a"});
++        assert(consensus.hashGenesisBlock == uint256{"6d8278642c6e1390286c74bd2697c5251771e9da1b860a5bd3d692b5d0ead151"});
 +        assert(genesis.hashMerkleRoot == uint256{"a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7"});
 +
 +        vFixedSeeds.clear();
 +        vSeeds.clear();
-+        vSeeds.emplace_back("dummySeed.invalid.");
 +        fDefaultConsistencyChecks = true;
 +        m_is_mockable_chain = true;
 +        m_assumeutxo_data.clear();
@@ -174,7 +173,7 @@ index a071833..0000000 100644
  std::unique_ptr<const CChainParams> CChainParams::SigNet(const SigNetOptions& options)
  {
      return std::make_unique<const SigNetParams>(options);
-@@ -629,7 +710,12 @@ std::unique_ptr<const CChainParams> CChainParams::RegTest(const RegTestOptions&
+@@ -629,7 +709,12 @@ std::unique_ptr<const CChainParams> CChainParams::RegTest(const RegTestOptions&
  {
      return std::make_unique<const CRegTestParams>(options);
  }
@@ -187,7 +186,7 @@ index a071833..0000000 100644
  std::unique_ptr<const CChainParams> CChainParams::Main(const MainNetOptions& options)
  {
      return std::make_unique<const CMainParams>(options);
-@@ -663,6 +749,7 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
+@@ -663,6 +748,7 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
      const auto testnet4_msg = CChainParams::TestNet4()->MessageStart();
      const auto regtest_msg = CChainParams::RegTest()->MessageStart();
      const auto signet_msg = CChainParams::SigNet()->MessageStart();
@@ -195,7 +194,7 @@ index a071833..0000000 100644
  
      if (std::ranges::equal(message, mainnet_msg)) {
          return ChainType::MAIN;
-@@ -674,6 +761,8 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
+@@ -674,6 +760,8 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
          return ChainType::REGTEST;
      } else if (std::ranges::equal(message, signet_msg)) {
          return ChainType::SIGNET;
@@ -204,3 +203,15 @@ index a071833..0000000 100644
      }
      return std::nullopt;
  }
+
+diff --git a/src/bitcoin-cli.cpp b/src/bitcoin-cli.cpp
+index c4510e3..0000000 100644
+--- a/src/bitcoin-cli.cpp
++++ b/src/bitcoin-cli.cpp
+@@ -439,4 +439,6 @@
+         case ChainType::REGTEST:
+             return " regtest";
++        case ChainType::UNITEDREGTEST:
++            return " unitedregtest";
+         case ChainType::MAIN:
+             return "";

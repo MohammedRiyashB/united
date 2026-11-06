@@ -18,15 +18,18 @@ The GitHub Actions workflow:
 1. Clones the exact Bitcoin Core v32.1 release.
 2. Verifies the locked tag object and commit IDs.
 3. Applies the UNITED C++ patch.
-4. Compiles the native daemon and CLI.
-5. Starts `bitcoind -chain=unitedregtest` and checks the genesis hash over RPC.
+4. Compiles the wallet-enabled native daemon and CLI.
+5. Starts two isolated `unitedregtest` nodes and checks both genesis hashes.
+6. Creates independent wallets, mines past coinbase maturity, checks a TCP P2P connection, sends a transaction, confirms a block and checks node synchronization/balance.
+
+The two-node functional sequence is not considered verified until its current workflow run passes every step. The last diagnosed failure was a future-dated private genesis timestamp; the genesis time, nonce and expected hash have now been corrected and the patch is being revalidated.
 
 The workflow run must pass before claiming a successful native build. The release signing key still requires independent fingerprint verification for a release-grade source provenance check.
 
 ## Still not implemented
 
-- UNITED public testnet and mainnet chain parameters
-- Mainnet genesis and production difficulty configuration
+- UNITED public-testnet and mainnet chain parameters
+- Public-network genesis, production difficulty configuration and public seed infrastructure
 - Independent consensus test vectors and audit
 - Production release builds, seed infrastructure and launch readiness
 
