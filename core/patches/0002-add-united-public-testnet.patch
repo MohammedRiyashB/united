@@ -217,7 +217,7 @@ index 0000000..0000000 100644
          addr = "tb1p35yvjel7srp783ztf8v6jdra7dhfzk5jaun8xz2qp6ws7z80n4tqa6qnlg";
          break;
 +    case ChainType::UNITEDTESTNET:
-+        addr = "tunit1p35yvjel7srp783ztf8v6jdra7dhfzk5jaun8xz2qp6ws7z80n4tqgj7560";
++        addr = "tunit1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxrevc2";
 +        break;
      case ChainType::REGTEST:
          addr = "bcrt1p35yvjel7srp783ztf8v6jdra7dhfzk5jaun8xz2qp6ws7z80n4tqsr2427";
