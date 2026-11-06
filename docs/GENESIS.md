@@ -20,11 +20,11 @@ The genesis timestamp is deliberately historical so that it cannot be ahead of a
 The current `network/united-public-testnet` branch contains these candidate constants:
 
 - Timestamp text: `UNITED PUBLIC TESTNET GENESIS 2026-11-06`
-- Timestamp: `1700000001`
-- Nonce: `60`
+- Timestamp: `1793937600` (2026-11-06 04:00:00 UTC)
+- Nonce: `3565`
 - Compact target: `0x1f0fffff`
 - Merkle root: `d913e5cf8a09ccf5d4382c4a1e78d8e8b62c9bc0538240c05b26e2baa1d35446`
-- Header hash: `00057ebf90a85fff3a45bd543a266d8ed59bc76ee3aadab4fc216416582686d0`
+- Header hash: `0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1`
 - Coinbase output script: `OP_RETURN UNITED PUBLIC TESTNET`, deliberately unspendable.
 
 The independent script `scripts/verify-public-testnet-genesis.py` serializes the coinbase transaction and 80-byte header, recomputes the Merkle root and SHA-256d hash, and checks proof of work against the target. The native node also asserts the same Merkle root and block hash.
