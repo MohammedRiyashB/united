@@ -7,6 +7,8 @@
 - Native patches: [0001-add-united-regtest.patch](patches/0001-add-united-regtest.patch), [0002-add-united-public-testnet.patch](patches/0002-add-united-public-testnet.patch)
 - Build and smoke-test workflow: [bitcoin-core-upstream.yml](../.github/workflows/bitcoin-core-upstream.yml)
 - Bootstrap helper: [bootstrap-bitcoin-core.sh](../scripts/bootstrap-bitcoin-core.sh)
+- Candidate build helper: [build-united-node.sh](../scripts/build-united-node.sh)
+- Test-only public-testnet GBT miner: [testnet-cpu-miner.py](../scripts/testnet-cpu-miner.py)
 
 Patch 0001 adds the private `unitedregtest` chain. Patch 0002 adds a separate `unitedtestnet` candidate with its own genesis, message magic, ports, address formats, chain type and CLI/Qt labels. Both retain Bitcoin Core's native SHA-256d proof-of-work, block validation, UTXO, P2P, wallet and RPC machinery.
 
