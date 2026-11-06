@@ -25,5 +25,4 @@ rpcpassword=REPLACE_WITH_LONG_RANDOM_RPC_PASSWORD
 # Manually add verified bootstrap peers after they exist.
 # addnode=REPLACE_WITH_VERIFIED_PEER_IP:29446
 
-# Operational safety.
-daemonwait=1
+# This file is consumed by the foreground systemd service.
