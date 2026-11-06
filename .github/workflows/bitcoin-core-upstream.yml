@@ -3,6 +3,7 @@ name: Bitcoin Core v32.1 native UNITED build
 on:
   pull_request:
     branches:
+      - main
       - consensus/bitcoin-core-32.1-migration
       - integration/bitcoin-core-32.1-native
       - integration/united-regtest-functional-tests
