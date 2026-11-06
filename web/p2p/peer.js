@@ -39,6 +39,11 @@ export class UnitedWebRTCPeer {
     this.closed = false;
     this.unsubscribe = signal.subscribe(message => this.handleSignal(message));
     this.pc.onconnectionstatechange = () => this.onState(this.pc.connectionState);
+    this.pc.onicecandidate = event => {
+      if (event.candidate && !this.closed) {
+        this.signal.send({ to: this.peerId, from: this.localId, candidate: event.candidate }).catch(() => this.onState("signalling-error"));
+      }
+    };
     this.pc.ondatachannel = event => this.attachChannel(event.channel);
   }
 
