@@ -30,13 +30,13 @@ Use the example config and systemd unit in this directory. Set unique RPC creden
 After starting the service, check locally:
 
 ```bash
-bitcoin-cli -chain=unitedtestnet -datadir=/var/lib/unitedtestnet getblockhash 0
-bitcoin-cli -chain=unitedtestnet -datadir=/var/lib/unitedtestnet getblockchaininfo
-bitcoin-cli -chain=unitedtestnet -datadir=/var/lib/unitedtestnet getnetworkinfo
-bitcoin-cli -chain=unitedtestnet -datadir=/var/lib/unitedtestnet getpeerinfo
+bitcoin-cli -conf=/etc/united/unitedtestnet.conf -chain=unitedtestnet -datadir=/var/lib/unitedtestnet getblockhash 0
+bitcoin-cli -conf=/etc/united/unitedtestnet.conf -chain=unitedtestnet -datadir=/var/lib/unitedtestnet getblockchaininfo
+bitcoin-cli -conf=/etc/united/unitedtestnet.conf -chain=unitedtestnet -datadir=/var/lib/unitedtestnet getnetworkinfo
+bitcoin-cli -conf=/etc/united/unitedtestnet.conf -chain=unitedtestnet -datadir=/var/lib/unitedtestnet getpeerinfo
 ```
 
 Expected genesis:
-`00057ebf90a85fff3a45bd543a266d8ed59bc76ee3aadab4fc216416582686d0`.
+`0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1`.
 
 A locally running node is not enough. Verify inbound connectivity from a genuinely external machine and check the peer handshake on a second independent operator node before publishing its endpoint.
