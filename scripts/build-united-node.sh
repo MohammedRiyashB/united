@@ -2,9 +2,9 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-WORKDIR="\${1:-$ROOT_DIR/.work/bitcoin-core-v32.1-united}"
+WORKDIR="${1:-$ROOT_DIR/.work/bitcoin-core-v32.1-united}"
 BUILD_DIR="$WORKDIR/build"
-JOBS="\${BUILD_JOBS:-2}"
+JOBS="${BUILD_JOBS:-2}"
 
 if [[ -e "$WORKDIR" ]]; then
   echo "ERROR: work directory already exists; refusing to overwrite: $WORKDIR" >&2
