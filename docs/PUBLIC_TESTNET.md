@@ -1,6 +1,6 @@
 # UNITED Public Testnet — Candidate Operator Guide
 
-<badge color="warning">Candidate build only — not a public launch</badge>
+> **Candidate build only — not a public launch.**
 
 The `unitedtestnet` native chain type is being added in branch `feature/united-public-testnet`. This guide documents the candidate parameters and the safe manual-peering procedure. Do not use testnet coins as money; they have no value.
 
