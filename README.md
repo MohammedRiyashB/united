@@ -2,7 +2,7 @@
 
 **United** is a proposed independent, SHA-256d proof-of-work cryptocurrency with a UTXO ledger and a nominal supply cap of 21,000,000 UNITED.
 
-> **Project status: private-regtest and public-testnet two-node native functional CI passed. The public testnet is implemented in the candidate branch but is not yet externally reachable or announced as live. Not mainnet.** The public-testnet branch adds a distinct `unitedtestnet` chain type, candidate genesis, network magic, ports and address encodings. No public seed nodes or independent bootstrap hosts are deployed, no public miner/pool is provided, and no signed release binaries or independent protocol review are complete. Testnet coins are valueless. Do not send real funds. No UNITED mainnet coins exist.
+> **Project status: the private-regtest and UNITED public-testnet two-node native functional tests have passed. The public testnet is still not externally reachable or announced as live.** The candidate branch contains a distinct `unitedtestnet` chain, genesis, network identifiers and an experimental solo CPU GBT miner. The repository now prepares a checksum-verified Ubuntu 24.04 x86_64 node bundle after native CI passes. No public bootstrap hosts, independent external peer tests, Stratum pool, signed release, or independent consensus audit are complete. Testnet coins are valueless. Do not send real funds. No UNITED mainnet coins exist.
 
 ## Current agreed design
 
@@ -30,13 +30,14 @@ The exact scheduled subsidy issuance after smallest-unit integer halving is **20
 | Architecture, threat model, roadmap | Drafted |
 | Monetary schedule reference implementation | Implemented and unit-tested |
 | SHA-256d header PoW demo | Implemented and unit-tested (regtest only) |
-| Private `unitedregtest` chain parameters/genesis | Implemented in native patch; functional mining validation pending |
-| Bitcoin Core-derived full-node daemon/CLI | Builds in CI; private regtest startup/genesis smoke test passed |
-| Private-regtest mining, wallet, transaction, P2P | Two-node end-to-end CI validation pending |
+| Private `unitedregtest` chain parameters/genesis | Implemented and two-node functional CI passed |
+| Bitcoin Core-derived full-node daemon/CLI | Native daemon/CLI build and startup tests passed |
+| Private-regtest mining, wallet, transaction, P2P | Two-node end-to-end CI passed |
 | Public testnet native chain type, genesis, two-node mining, wallet transfer and P2P | Implemented and passed native CI in `network/united-public-testnet` |
 | Public seed nodes/bootstrap peers | Not deployed |
-| Public mining client/pool | Not implemented |
-| Public testnet release binaries | Not published |
+| Public solo mining | Experimental single-process Python GBT miner implemented; not ASIC/Stratum software |
+| Stratum pool / mining coordinator | Not implemented |
+| Public testnet node bundle | Checksum-verified CI artifact is being added; not a signed production release |
 | Mainnet chain parameters/genesis | Not implemented |
 | Mobile / desktop wallet release | Not implemented |
 | Explorer / indexer / API | Contract draft only; not implemented |
