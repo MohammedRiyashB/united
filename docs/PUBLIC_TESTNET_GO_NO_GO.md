@@ -25,7 +25,7 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 - [ ] Verify the upstream signed tag with an independently trusted maintainer keyring; record the full commit, signer fingerprint, source hashes and SBOM.
 - [ ] Run relevant upstream unit, functional, fuzz and sanitizer suites, not just a successful daemon compilation.
 - [x] An earlier native two-node public-testnet run (42164550405) passed 101 GBT/submitblock-mined blocks, coinbase-maturity/miner-balance checks, P2P block synchronization, a wallet send, a confirmation block and recipient-balance verification.
-- [ ] Pass the upgraded witness-commitment-aware GBT miner in the latest native run (42165119964); its offline serialization tests already pass in Go CI run 42165119995.
+- [x] Pass the upgraded witness-commitment-aware GBT miner in native run [42165119964](https://github.com/MohammedRiyashB/united/actions/runs/42165119964); offline serialization tests also pass in Go CI run [42165119995](https://github.com/MohammedRiyashB/united/actions/runs/42165119995).
 - [ ] Add multi-node backup/restore, disconnection, partition, restart and competing-chain reorganization tests.
 - [ ] Have independent reviewers inspect every consensus-critical patch. No unresolved critical/high findings.
 - [ ] Produce reproducible source builds and candidate binaries with checksums, provenance and offline-signed release metadata.
@@ -62,7 +62,7 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 - [x] Independent Python genesis verifier has been added.
 - [x] Public-testnet patch applied and CMake configuration succeeded in the latest native runs.
 - [x] Earlier native candidate run 42164550405 compiled and passed the two-node public-testnet mining/transaction/P2P smoke test.
-- [ ] Latest witness-commitment-aware miner build and end-to-end CI pass (run 42165119964).
+- [x] Latest witness-commitment-aware miner build and end-to-end CI pass (run 42165119964).
 - [ ] Public network magic, ports, HRP and address prefixes are checked for collisions by independent reviewers.
 - [ ] Multiple public seed/bootstrap hosts are deployed and reachable from external networks.
 - [ ] An independently operated miner or pool is deployed and can produce valid blocks; CI's Python miner is only a test harness.
