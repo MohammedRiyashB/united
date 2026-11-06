@@ -8,7 +8,7 @@ usage() {
 }
 
 if [[ "$#" -ne 1 ]]; then usage; exit 2; fi
-if [[ "\${EUID}" -ne 0 ]]; then
+if [[ "${EUID}" -ne 0 ]]; then
   echo "ERROR: run this installer with sudo/root." >&2
   exit 1
 fi
