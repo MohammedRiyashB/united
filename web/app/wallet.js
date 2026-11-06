@@ -1,6 +1,6 @@
 import { Wallet, Mnemonic, isAddress, formatEther } from "https://cdn.jsdelivr.net/npm/ethers@6.13.5/+esm";
 
-const KEY = "united.wallet.v1";
+let KEY = "united.wallet.v1";
 let wallets = [];
 let activeWalletId = null;
 let unlockedPassword = null;
@@ -46,7 +46,7 @@ function showModal(title, body) {
 function closeModal(){ $("wallet-modal").hidden=true; }
 function render() {
   const root=$("wallet-app"); if(!root)return;
-  if(!wallets.length) {
+  if(!wallets.length && !localStorage.getItem(KEY)) {
     root.innerHTML = `<div class="wallet-welcome"><div class="wallet-orbit">U</div><p class="wallet-eyebrow">UNITED SELF-CUSTODY</p><h1>Your wallet.<br><span>Your network.</span></h1><p class="wallet-muted">Create a new UNITED wallet or restore an existing recovery phrase. Your recovery phrase stays on this device.</p><div class="wallet-actions"><button class="wallet-primary" id="create-wallet">Create new wallet <b>→</b></button><button class="wallet-secondary" id="import-wallet">Import existing wallet</button></div><p class="wallet-footnote">UNITED Testnet · Native UNIT asset only · Keys encrypted locally</p></div>`;
     $("create-wallet").onclick=()=>createFlow();
     $("import-wallet").onclick=()=>importFlow();
@@ -112,6 +112,8 @@ function settingsFlow(){
 }
 export function mountUnitedWallet(user){
   currentUser=user;
+  KEY = "united.wallet.v1." + user.uid;
+  $("wallet-modal-close")?.addEventListener("click", closeModal);
   const raw=localStorage.getItem(KEY);
   if(raw){try{const parsed=JSON.parse(raw);activeWalletId=parsed.activeWalletId||null;}catch{}}
   wallets=[];activeWallet=null;unlockedPassword=null;render();
