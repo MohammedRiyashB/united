@@ -250,7 +250,7 @@ jobs:
           wait_rpc rpc1
           wait_rpc rpc2
 
-          expected="00057ebf90a85fff3a45bd543a266d8ed59bc76ee3aadab4fc216416582686d0"
+          expected="0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1"
           test "$("$cli" "${rpc1[@]}" getblockhash 0)" = "$expected"
           test "$("$cli" "${rpc2[@]}" getblockhash 0)" = "$expected"
           "$cli" "${rpc1[@]}" getblockchaininfo | grep -q '"chain": "unitedtestnet"'
