@@ -27,9 +27,11 @@ on:
       - "core/patches/**"
       - "config/**"
       - "scripts/bootstrap-bitcoin-core.sh"
+      - "scripts/build-united-node.sh"
       - "scripts/verify-public-testnet-genesis.py"
       - "scripts/testnet-cpu-miner.py"
       - "scripts/test-testnet-cpu-miner.py"
+      - "infra/public-testnet/**"
   workflow_dispatch:
 
 permissions:
