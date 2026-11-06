@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "unitednetwork",
     "public": "web/app",
     "ignore": [
       "firebase.json",
