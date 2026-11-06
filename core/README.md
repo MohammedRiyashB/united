@@ -32,14 +32,15 @@ The GitHub Actions workflow:
 8. Creates independent private-regtest wallets, mines past coinbase maturity, checks a TCP P2P connection, sends a transaction, confirms a block and checks node synchronization/balance.
 9. Repeats the mining, wallet, transaction and P2P flow on two isolated `unitedtestnet` nodes.
 
-The two-node functional sequence is not considered verified until its current workflow run passes every step. The last diagnosed failure was a future-dated private genesis timestamp; the genesis time, nonce and expected hash have now been corrected and the patch is being revalidated.
+The private-regtest two-node functional sequence passed every step in GitHub Actions run `42157048924`, including mining, wallet creation, transaction confirmation and P2P synchronization. The public-testnet patch and its two-node CI are a separate candidate workflow and remain unverified until their fresh run passes.
 
 The workflow run must pass before claiming a successful native build. The release signing key still requires independent fingerprint verification for a release-grade source provenance check.
 
 ## Still not implemented
 
-- UNITED public-testnet and mainnet chain parameters
-- Public-network genesis, production difficulty configuration and public seed infrastructure
+- Public bootstrap/seed infrastructure and independently operated public peers
+- Public release artifacts, signed checksums/SBOM, monitoring and independent security review
+- Mainnet parameters, mainnet genesis and production difficulty configuration
 - Independent consensus test vectors and audit
 - Production release builds, seed infrastructure and launch readiness
 
