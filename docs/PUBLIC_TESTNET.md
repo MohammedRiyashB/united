@@ -11,7 +11,8 @@
 | P2P / RPC | `29446 / 29447` |
 | Bech32 HRP | `tunit` |
 | Base58 pubkey / script / WIF | `75 / 76 / 203` |
-| Genesis hash | `00057ebf90a85fff3a45bd543a266d8ed59bc76ee3aadab4fc216416582686d0` |
+| Genesis hash | `0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1` |
+| Genesis time / nonce | `1793937600` / `3565` (2026-11-06 04:00 UTC) |
 | Genesis Merkle root | `d913e5cf8a09ccf5d4382c4a1e78d8e8b62c9bc0538240c05b26e2baa1d35446` |
 | Subsidy / halving | `50 UNITED / 210,000 blocks` |
 | Target spacing / retarget | `600 seconds / 2,016 blocks` |
