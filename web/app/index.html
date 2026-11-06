@@ -60,15 +60,8 @@
       </section>
     </section>
 
-    <section class="account-card" id="account-view" hidden>
-      <div class="account-symbol">✓</div>
-      <p class="eyebrow">AUTHENTICATED SESSION</p>
-      <h1>You’re connected.</h1>
-      <p class="account-copy">Your UNITED account session is active on this device.</p>
-      <div class="identity-box"><small>ACCOUNT IDENTITY</small><strong id="account-identity"></strong><span id="account-provider"></span></div>
-      <div class="account-warning"><b>Wallet security reminder</b><p>Never share your seed phrase or private key. Account authentication and wallet signing are separate systems.</p></div>
-      <button id="logout" class="submit-button" data-auth-action>Sign out <span>→</span></button>
-    </section>
+    <section id="account-view" hidden><div id="wallet-app"></div></section>
+  <div id="wallet-modal" class="wallet-modal" hidden><div class="wallet-modal-card"><button class="wallet-modal-close" id="wallet-modal-close" aria-label="Close">×</button><h2 id="wallet-modal-title"></h2><div id="wallet-modal-body"></div></div></div>
 
     <footer class="footer"><span>© UNITED Network</span><span>Experimental testnet · No real-value assets</span><span>Built for the open network</span></footer>
   </main>
