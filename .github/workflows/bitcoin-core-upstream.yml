@@ -9,7 +9,6 @@ on:
       - ".github/workflows/bitcoin-core-upstream.yml"
       - "core/upstream.lock.toml"
       - "core/patches/**"
-      - "scripts/verify-public-testnet-genesis.py"
       - "scripts/bootstrap-bitcoin-core.sh"
   workflow_dispatch:
 
@@ -51,10 +50,6 @@ jobs:
           cd upstream
           git apply --check ../core/patches/0001-add-united-regtest.patch
           git apply ../core/patches/0001-add-united-regtest.patch
-          git apply --check ../core/patches/0002-add-united-public-testnet.patch
-          git apply ../core/patches/0002-add-united-public-testnet.patch
-      - name: Independently verify UNITED public-testnet genesis
-        run: python3 scripts/verify-public-testnet-genesis.py
       - name: Configure minimal daemon build
         run: |
           cmake -S upstream -B upstream/build -G Ninja \
@@ -72,7 +67,6 @@ jobs:
           daemon="upstream/build/bin/bitcoind"
           node1="$(mktemp -d)"
           node2="$(mktemp -d)"
-          testnet="$(mktemp -d)"
           rpc_user="unitedci"
           rpc_pass="ci-secret"
           rpc1=(-chain=unitedregtest -datadir="$node1" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29443)
@@ -81,9 +75,8 @@ jobs:
           wallet2=("${rpc2[@]}" -rpcwallet=united-recipient)
           cleanup() {
             "$cli" "${rpc2[@]}" stop >/dev/null 2>&1 || true
-            "$cli" -chain=unitedtestnet -datadir="$testnet" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=39443 stop >/dev/null 2>&1 || true
             "$cli" "${rpc1[@]}" stop >/dev/null 2>&1 || true
-            rm -rf "$node1" "$node2" "$testnet"
+            rm -rf "$node1" "$node2"
           }
           dump_diagnostics() {
             echo "===== node1 process ====="
@@ -186,29 +179,6 @@ jobs:
           awk -v b="$received" 'BEGIN { exit !(b >= 1.0) }'
           "$cli" "${rpc1[@]}" getblockchaininfo
           "$cli" "${rpc2[@]}" getblockchaininfo
-
-          # Start the distinct public-testnet chain identity and verify its
-          # compiled genesis, address HRP and first proof-of-work block.
-          testnet_startup="$testnet/bitcoind-startup.log"
-          if ! "$daemon" -chain=unitedtestnet -datadir="$testnet" \
-            -daemonwait=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" \
-            -rpcport=39443 -port=39446 -bind=127.0.0.1:39446 \
-            -natpmp=0 -discover=0 -listenonion=0 -fallbackfee=0.0002 \
-            -debug=1 >"$testnet_startup" 2>&1; then
-            cat "$testnet_startup" >&2 || true
-            find "$testnet" -name debug.log -type f -exec tail -n 200 {} \; >&2 || true
-            exit 1
-          fi
-          testnet_rpc=(-chain=unitedtestnet -datadir="$testnet" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=39443)
-          "$cli" "${testnet_rpc[@]}" getblockchaininfo
-          testnet_genesis="$("$cli" "${testnet_rpc[@]}" getblockhash 0)"
-          test "$testnet_genesis" = "00000f7003bea5babbc9b271415f351472e51edd3d34e798214f6734b8d27da9"
-          "$cli" "${testnet_rpc[@]}" createwallet "testnet-smoke"
-          testnet_address="$("$cli" "${testnet_rpc[@]}" -rpcwallet=testnet-smoke getnewaddress)"
-          [[ "$testnet_address" == tunit1* ]]
-          "$cli" "${testnet_rpc[@]}" generatetoaddress 1 "$testnet_address" >/dev/null
-          test "$("$cli" "${testnet_rpc[@]}" getblockcount)" -eq 1
-          "$cli" "${testnet_rpc[@]}" getblockchaininfo
       - name: Record compiled binaries
         run: |
           find upstream/build/bin -maxdepth 1 -type f -printf '%f\n' | sort
