@@ -14,7 +14,7 @@ Patch 0001 adds the private `unitedregtest` chain. Patch 0002 adds a separate `u
 
 The public-testnet candidate uses a real retarget schedule; it does not inherit private regtest's no-retarget mode. Its PoW limit is intentionally easier than mainnet for a valueless test network. The candidate has no DNS seeds or fixed seeds because no seed operators have been deployed.
 
-**Important:** this is a private development network. It deliberately uses an easy PoW target, allows minimum difficulty and disables retargeting for rapid local testing. These settings are not proposed mainnet settings.
+**Network distinction:** `unitedregtest` is a private development network and deliberately uses an easy PoW target, minimum-difficulty blocks and disabled retargeting. `unitedtestnet` is a separate public-testnet candidate with retargeting enabled and a different genesis/network identity. Neither configuration is mainnet, and testnet coins have no value.
 
 ## Build process
 
@@ -22,15 +22,13 @@ The GitHub Actions workflow:
 1. Independently verifies the candidate public-testnet genesis in Python.
 2. Clones the exact Bitcoin Core v32.1 release.
 2. Verifies the locked tag object and commit IDs.
-3. Applies the UNITED C++ patch.
+3. Applies both UNITED C++ patches.
 4. Compiles the wallet-enabled native daemon and CLI.
 5. Starts two isolated `unitedregtest` nodes and checks both genesis hashes.
 6. Creates independent private-regtest wallets, mines past coinbase maturity, checks a TCP P2P connection, sends a transaction, confirms a block and checks node synchronization/balance.
 7. Starts two public-testnet nodes, checks both testnet genesis hashes and `tunit1` addresses, and verifies their TCP P2P handshake.
 
-The two-node functional sequence is not considered verified until its current workflow run passes every step. The last diagnosed failure was a future-dated private genesis timestamp; the genesis time, nonce and expected hash have now been corrected and the patch is being revalidated.
-
-The workflow run must pass before claiming a successful native build. The release signing key still requires independent fingerprint verification for a release-grade source provenance check.
+Earlier candidate revisions passed the two-node private-regtest and public-testnet smoke tests. However, the audited `main` commit did not yet have a native workflow run because the workflow lacked a push trigger for `main`; this audit adds that trigger. Do not claim the audited `main` revision has passed native validation until its new workflow run succeeds on both architectures. The workflow checks the pinned tag object and commit but does not yet establish independent GPG signer trust; release-grade provenance still requires independent signer-fingerprint verification.
 
 ## Still not implemented
 
