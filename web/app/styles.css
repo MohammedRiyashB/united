@@ -55,3 +55,33 @@ body{background:#f5f7fb;color:#172033}.page-shell{color:#172033}
 .wallet-modal-card{background:#fff;color:#1e2d45;border-color:#e0e7f0}
 .wallet-modal-card input,.wallet-modal-card textarea{background:#f8fafd;color:#1e2d45;border-color:#dce4ef}
 .wallet-modal-close{color:#5c6b82}.wallet-muted{color:#65758d}
+
+
+/* UNITED five-mainnet wallet initialization */
+.uw-network-label{display:block;margin:8px 2px 7px;font-size:9px;font-weight:800;letter-spacing:.16em;color:#71829b}
+.uw-network-picker{width:100%;min-height:46px;padding:0 13px;border:1px solid #dce5ef;border-radius:13px;background:#fff;color:#263750;font:600 12px "DM Sans",system-ui;outline:none;margin-bottom:14px}
+.uw-network-picker:focus{border-color:#6b9ed5;box-shadow:0 0 0 3px #4b91db20}
+.uw-chain-list{display:grid;gap:8px}
+.uw-chain-row{width:100%;display:flex;align-items:center;gap:10px;padding:12px 11px;text-align:left;border:1px solid #e1e8f1;border-radius:14px;background:#fff;color:#263750;cursor:pointer}
+.uw-chain-row.selected{border-color:#79a5d8;background:#f0f6ff;box-shadow:0 0 0 2px #4b91db12}
+.uw-chain-symbol{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:12px;background:#edf4fc;color:#477fc0;font:700 19px "Space Grotesk"}
+.uw-chain-copy,.uw-chain-balance{min-width:0;display:grid;gap:4px}
+.uw-chain-copy{flex:1}
+.uw-chain-copy b,.uw-chain-balance b{font-size:11px;overflow-wrap:anywhere}
+.uw-chain-copy small,.uw-chain-balance small{font-size:9px;color:#8190a6;line-height:1.35;overflow-wrap:anywhere}
+.uw-chain-balance{text-align:right;max-width:47%}
+.uw-history-row,.uw-explore-network{padding:14px;border:1px solid #e1e8f1;border-radius:13px;background:#fff;margin-bottom:9px}
+.uw-history-row>div:first-child,.uw-mini-tx{display:grid;gap:5px}
+.uw-history-row b,.uw-explore-network b{font-size:12px;color:#263750}
+.uw-history-row small,.uw-explore-network span{font-size:10px;color:#8190a6;overflow-wrap:anywhere}
+.uw-history-actions{display:flex;gap:12px;margin-top:10px}
+.uw-history-actions button,.uw-history-actions a,.uw-explore-network a,.uw-activity-list a{border:0;background:none;color:#477fc0;font:600 10px "DM Sans";text-decoration:none}
+.uw-history-result{font-size:10px;color:#4c6c91;margin:7px 0 0}
+.uw-mini-tx{padding:8px 0;border-bottom:1px solid #e5ebf3}
+.uw-mini-tx b{font-size:10px;color:#263750}
+.uw-mini-tx small{font-size:9px;color:#8190a6}
+.uw-explore-network-list{display:grid;gap:8px;margin-top:20px}
+.uw-explore-network{display:grid;gap:6px;margin:0}
+.uw-activity-list{margin-top:15px}
+.uw-activity-empty a{font-size:10px;color:#477fc0;text-decoration:none}
+.uw-action-grid button:disabled{opacity:.55;cursor:not-allowed}
