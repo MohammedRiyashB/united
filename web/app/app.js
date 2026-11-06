@@ -29,6 +29,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+// Initialize persistence before any auth action can reference this promise.
+const authReady = setPersistence(auth, browserLocalPersistence);
 const $ = (id) => document.getElementById(id);
 
 const statusBox = $("auth-status");
@@ -177,7 +180,6 @@ $("logout").addEventListener("click", () => runAuth("Signing out…", async () =
   await signOut(auth);
 }));
 
-const authReady = setPersistence(auth, browserLocalPersistence);
 
 onAuthStateChanged(auth, (user) => {
   $("auth-view").hidden = Boolean(user);
