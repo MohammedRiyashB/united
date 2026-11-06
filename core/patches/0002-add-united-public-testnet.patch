@@ -178,7 +178,7 @@ index 0000000..0000000 100644
  std::unique_ptr<const CChainParams> CChainParams::Main(const MainNetOptions& options)
  {
      return std::make_unique<const CMainParams>(options);
-@@ -814,3 +814,4 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
+@@ -813,3 +813,4 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
      const auto regtest_msg = CChainParams::RegTest()->MessageStart();
      const auto signet_msg = CChainParams::SigNet()->MessageStart();
      const auto unitedregtest_msg = CChainParams::UnitedRegTest()->MessageStart();
