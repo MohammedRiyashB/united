@@ -10,12 +10,12 @@ address_hrp = "UNSET"
 seed_nodes = []
 
 [testnet]
-name = "UNITED Testnet"
-message_start = "UNSET"
-p2p_port = 0
-rpc_port = 0
-address_hrp = "UNSET"
-seed_nodes = []
+name = "UNITED Public Testnet (candidate)"
+message_start = "756e7431" # ASCII "unt1"; four-byte P2P magic
+p2p_port = 29555
+rpc_port = 29554
+address_hrp = "unt"
+seed_nodes = [] # No bootstrap servers are deployed; use -addnode manually.
 
 [regtest]
 name = "UNITED Private Regtest"
