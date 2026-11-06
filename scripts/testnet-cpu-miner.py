@@ -91,7 +91,7 @@ def coinbase_transaction(
         raise ValueError("getblocktemplate returned an invalid default witness commitment script")
 
     vin = (
-        b"\\x01"
+        b"\x01"
         + bytes(32)
         + struct.pack("<I", 0xFFFFFFFF)
         + compact_size(len(script_sig))
@@ -99,7 +99,7 @@ def coinbase_transaction(
         + struct.pack("<I", 0xFFFFFFFF)
     )
     outputs = (
-        b"\\x02"
+        b"\x02"
         + struct.pack("<q", value)
         + compact_size(len(payout_script))
         + payout_script
@@ -113,7 +113,7 @@ def coinbase_transaction(
     # SegWit coinbase witness: one 32-byte reserved value. The witness
     # commitment output is copied from getblocktemplate and checked below.
     witness = b"\\x01\\x20" + bytes(32)
-    full = struct.pack("<i", 2) + b"\\x00\\x01" + vin + outputs + witness + locktime
+    full = struct.pack("<i", 2) + b"\x00\\x01" + vin + outputs + witness + locktime
     return stripped, full
 
 def merkle_root(transactions: list[bytes]) -> bytes:
