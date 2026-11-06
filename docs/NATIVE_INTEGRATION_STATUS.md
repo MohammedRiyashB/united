@@ -49,7 +49,7 @@ GitHub Actions run [42164550405](https://github.com/MohammedRiyashB/united/actio
 - a 1 UNITED wallet transaction was sent;
 - the miner produced block 102 and the second wallet's balance assertion passed.
 
-The strengthened CI miner constructs the BIP141 coinbase witness reserved value and validates the template witness commitment. It deliberately rejects witness-bearing mempool transactions; CI uses legacy wallet transactions. This is a test harness, not a production miner.
+The strengthened CI miner constructs the BIP141 coinbase witness reserved value and validates the template witness commitment. It uses the template's txid and wtxid values separately and includes the serialized template transactions in the submitted block. The offline tests cover coinbase witness serialization and commitment consistency. This is a test harness, not a production miner.
 
 ## 4. Latest strengthened validation
 
