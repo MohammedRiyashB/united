@@ -1,6 +1,6 @@
 # Infrastructure Plan — Not Deployed
 
-No UNITED production infrastructure currently exists.
+No UNITED mainnet or public-testnet infrastructure is deployed. The public-testnet chain candidate has no DNS/fixed seed nodes yet and currently requires manual `-addnode` peering.
 
 ## Planned roles
 
@@ -19,6 +19,13 @@ No UNITED production infrastructure currently exists.
 - Use separate accounts, networks and credentials for mainnet/testnet/regtest.
 - Make indexers disposable and rebuildable; never treat their database as consensus state.
 - Ensure seed infrastructure is geographically and administratively diverse.
+
+## Public-testnet bootstrap requirements
+
+- Deploy at least two independently operated, monitored bootstrap peers on P2P port 29555.
+- Confirm each peer runs the exact public-testnet genesis and candidate chain parameters.
+- Publish verified peer endpoints only after uptime, peer exchange and restart/recovery tests.
+- Keep RPC private; expose only the P2P listener to the internet.
 
 ## Pre-mainnet infrastructure evidence
 
