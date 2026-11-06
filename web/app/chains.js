@@ -34,6 +34,7 @@ export const NETWORKS = [
 
 const dependencyLoader = Promise.all([
   import("https://esm.sh/@scure/bip39@2.4.0?bundle"),
+  import("https://esm.sh/@scure/bip39@2.4.0/wordlists/english.js?bundle"),
   import("https://esm.sh/@scure/bip32@2.4.0?bundle"),
   import("https://esm.sh/@scure/btc-signer@2.4.1?bundle"),
   import("https://esm.sh/micro-key-producer@0.10.2/slip10.js?bundle"),
@@ -48,8 +49,8 @@ export function getNetwork(id) {
 
 export async function deriveMultiChainAccounts(mnemonic, evmAddress) {
   const phrase = String(mnemonic || "").trim().toLowerCase().replace(/\\s+/g, " ");
-  const [bip39, bip32, btc, slip10Module, base] = await dependencyLoader;
-  if (!bip39.validateMnemonic(phrase)) throw new Error("Invalid BIP-39 recovery phrase.");
+  const [bip39, english, bip32, btc, slip10Module, base] = await dependencyLoader;
+  if (!bip39.validateMnemonic(phrase, english.wordlist)) throw new Error("Invalid BIP-39 recovery phrase.");
   const seed = await bip39.mnemonicToSeedWebcrypto(phrase, "");
   const bitcoinNode = bip32.HDKey.fromMasterSeed(seed).derive("m/84'/0'/0'/0/0");
   const bitcoinPayment = btc.p2wpkh(bitcoinNode.publicKey);
@@ -154,7 +155,7 @@ export async function readNetworkState(networkId, address) {
       if (genesisHash !== network.genesisHash) throw new Error("Solana endpoint did not identify as Solana Mainnet.");
       const [balance, signatures, slot] = await Promise.all([
         rpc(network.rpc, "getBalance", [address, { commitment: "finalized" }]),
-        rpc(network.rpc, "getSignaturesForAddress", [address, { limit: 12 }, { commitment: "finalized" }]),
+        rpc(network.rpc, "getSignaturesForAddress", [address, { limit: 12, commitment: "finalized" }]),
         rpc(network.rpc, "getSlot", [{ commitment: "finalized" }])
       ]);
       return {
