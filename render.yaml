@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: united-rpc-gateway
+    runtime: go
+    plan: free
+    buildCommand: go build -o app ./cmd/united-rpc-gateway
+    startCommand: ./app
+    healthCheckPath: /healthz
+    envVars:
+      - key: CORS_ALLOWED_ORIGIN
+        value: https://unitedcryptonetwork.web.app
