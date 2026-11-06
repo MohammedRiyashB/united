@@ -18,10 +18,10 @@ import (
 const expectedChain = "unitedtestnet"
 
 type config struct {
-	addr         string
-	rpcURL       string
-	rpcUser      string
-	rpcPass      string
+	addr          string
+	rpcURL        string
+	rpcUser       string
+	rpcPass       string
 	allowedOrigin string
 }
 
