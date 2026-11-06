@@ -201,8 +201,8 @@ jobs:
           rpc_pass="ci-testnet-secret"
           rpc1=(-chain=unitedtestnet -datadir="$node1" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29447)
           rpc2=(-chain=unitedtestnet -datadir="$node2" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29449)
-          wallet1=("${rpc1[@]}" -rpcwallet=united-testnet-wallet)
-          wallet2=("${rpc2[@]}" -rpcwallet=united-testnet-wallet)
+          wallet1=("${rpc1[@]}" -rpcwallet=united-testnet-miner)
+          wallet2=("${rpc2[@]}" -rpcwallet=united-testnet-recipient)
           cleanup() {
             "$cli" "${rpc2[@]}" stop >/dev/null 2>&1 || true
             "$cli" "${rpc1[@]}" stop >/dev/null 2>&1 || true
