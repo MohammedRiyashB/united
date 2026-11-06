@@ -1,6 +1,6 @@
 # UNITED Consensus Specification — Migration Baseline 0.2
 
-**Status:** migration baseline / design freeze candidate. Not implemented, not a complete deployable consensus specification, and not a launch authorization.
+**Status:** migration baseline plus a candidate public-testnet parameter set in the native integration branch. The private regtest passed two-node functional CI. The public-testnet candidate still requires native CI, independent consensus review, public seed infrastructure and a go/no-go decision; this document is not a launch authorization.
 
 This document selects Bitcoin Core 32.1 as the upstream codebase candidate. It does not claim that a UNITED fork has been built. The upstream source pin is recorded in [`core/upstream.lock.toml`](../core/upstream.lock.toml).
 
@@ -56,7 +56,7 @@ The selected baseline is Bitcoin-style SHA-256d proof of work:
 - Chain selection: greatest accumulated valid chainwork, not simply greatest height.
 - Coinbase maturity: **100 blocks** (UNITED-specific parameter).
 
-Important: the exact `powLimit`, genesis `nBits`, initial difficulty, testnet difficulty exceptions, and any testnet-only no-retarget behavior are network parameters and remain unset until test-vector review. Never copy Bitcoin's genesis block, genesis hash, message magic, ports, address prefixes or seed nodes.
+Important: mainnet `powLimit`, genesis `nBits`, initial difficulty and all production network identifiers remain unset. The public-testnet candidate values are recorded in Section 8 and must not be treated as frozen until independent test-vector review. Never copy Bitcoin's genesis block, genesis hash, message magic, ports, address prefixes or seed nodes.
 
 ## 4. Transaction and script compatibility
 
@@ -102,25 +102,47 @@ Before mainnet: independent security/consensus audit, remediation and retest, a 
 - No UNITED mainnet coins exist. Do not accept funds or advertise an exchange listing.
 - No upstream binaries are being relabelled as UNITED binaries.
 
-## 8. Current private-regtest implementation (not a public parameter set)
+## 8. Implemented private regtest and candidate public testnet
 
-The native integration branch now contains a separate `unitedregtest` chain type for local testing only:
+### Private development regtest (validated)
 
-| Parameter | Private regtest value |
+| Parameter | Value |
 |---|---|
 | Chain type | `unitedregtest` |
 | Initial subsidy / halving | 50 UNITED / 210,000 blocks |
 | Target spacing / timespan | 600 seconds / 1,209,600 seconds |
-| PoW limit and genesis bits | `7fff...ffff` / `0x207fffff` |
+| PoW limit / genesis bits | `7fff...ffff` / `0x207fffff` |
 | Minimum-difficulty exception | Enabled |
 | Automatic retargeting | Disabled |
 | Message magic | `fa b1 d0 01` |
-| Default P2P / RPC ports | 29444 / 29443 |
-| Address prefixes / HRP | private values; HRP `unitrt` |
+| P2P / RPC ports | 29444 / 29443 |
+| Address HRP | `unitrt` |
 | Seed nodes | None |
 
-The private genesis is timestamp `1700000000`, nonce `1`, Merkle root `a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7`, and header hash `6d8278642c6e1390286c74bd2697c5251771e9da1b860a5bd3d692b5d0ead151`. These values are not suitable for a public testnet or mainnet. The public testnet and mainnet each need their own reviewed consensus and network parameters.
+Private genesis timestamp `1700000000`, nonce `1`, Merkle root `a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7`, block hash `6d8278642c6e1390286c74bd2697c5251771e9da1b860a5bd3d692b5d0ead151`. GitHub Actions run 42157048924 passed the two-node mining, wallet, transaction and P2P functional sequence.
+
+### Public testnet candidate (not yet released)
+
+| Parameter | Candidate value |
+|---|---|
+| Chain type | `unitedtestnet` |
+| Initial subsidy / halving | 50 UNITED / 210,000 blocks |
+| Target spacing / timespan | 600 seconds / 1,209,600 seconds |
+| PoW limit / genesis bits | `0000ffff0000...0000` / `0x1f00ffff` |
+| Minimum-difficulty exception | Enabled for delayed blocks |
+| BIP94 timewarp / block-storm mitigation | Enabled |
+| Automatic retargeting | Enabled; 2,016-block interval |
+| Message magic | `75 6e 74 31` (ASCII `unt1`) |
+| P2P / RPC ports | 29555 / 29554 |
+| Base58 pubkey / script / secret prefixes | 85 / 86 / 213 |
+| Extended public / secret prefixes | `04 55 4e 54` / `04 55 4e 56` |
+| Bech32 HRP | `unt` |
+| DNS/fixed seeds | None; manual `-addnode` bootstrap only |
+
+Candidate public-testnet genesis timestamp `1767225600` (2026-01-01 00:00:00 UTC), nonce `15174`, `nBits=0x1f00ffff`, Merkle root `63ba230a57da664d056cb02ed1dc34bd83a0c774bc1c7421ac6474ad97cf82ff`, block hash `00003b8e20fef32b7abc0c295c9bbce1931bc53f5688aeeb75301b997ba6bd00`. The independent verifier is `scripts/verify-united-testnet-genesis.py`.
+
+These public-testnet values are implementation candidates, not independently audited or globally collision-reviewed constants. The network has no DNS/fixed seed operators or public services deployed. Nodes must be manually connected to a known peer with `-addnode=<peer-ip>:29555` until seed infrastructure is established. Testnet coins are valueless.
 
 ## 9. Open values required before implementation can be called complete
 
-The following are intentionally not guessed for public testnet and mainnet: `powLimit`, genesis parameters, P2P magic/ports, address prefixes/HRPs, initial script deployment schedule, DNS seeds, checkpoints, minimum chainwork, assume-valid policy, public testnet difficulty policy and final release versioning. These require collision checks, operator/security review and committed test vectors.
+The following remain intentionally unset for mainnet: mainnet PoW limit, genesis parameters, P2P magic and ports, address prefixes/HRP, DNS seeds, checkpoints, minimum chainwork, assume-valid policy, production activation schedule, source release versioning, and independently reviewed difficulty rules. Public-testnet candidate parameters also remain subject to independent consensus review, network-identifier collision checks, adversarial tests, seed/operator deployment and public release approval.
