@@ -1,6 +1,6 @@
 # UNITED Public Testnet — Candidate Operator Guide
 
-**Status: implementation candidate, not a live network.** The native chain type and genesis are in the `network/united-public-testnet` branch and require fresh native CI plus independent review. No public seed nodes or miners are currently deployed. Testnet coins have no value.
+**Status: locally validated candidate, not a live public network.** The native chain type, genesis, two-node mining, wallet transaction and P2P synchronization have passed native CI on the candidate branch. The current bundle/miner updates are being revalidated. No external bootstrap peers have been deployed or verified. Testnet coins have no value.
 
 ## Candidate network identity
 
@@ -53,7 +53,7 @@ Open inbound TCP port `29446` only when you are intentionally operating a public
 
 ## Peer connection and current bootstrap limitation
 
-No DNS seed names or fixed seed addresses are configured because no independent seed operators have been provisioned. A node started today will not automatically discover other UNITED testnet nodes.
+No DNS seed names or fixed seed addresses are configured because no independent seed operators have been provisioned. A node will not automatically discover other UNITED testnet nodes. After CI publishes the candidate Ubuntu 24.04 x86_64 node bundle, two independent operators must deploy it, open inbound TCP 29446, and exchange verified public endpoints.
 
 After an operator independently deploys and publishes a reachable node, connect using:
 
@@ -67,9 +67,9 @@ Do not substitute made-up hostnames or localhost addresses for public seed infra
 
 ## Mining status
 
-The native node inherits Bitcoin Core's block-template and validation machinery, but this repository does not yet ship a UNITED mining client, Stratum pool or managed miner service. The private-regtest `generatetoaddress` RPC is deliberately not available as a public-testnet mining strategy. A compatible external SHA-256d miner/pool must be configured against the testnet's block-template service before public miners can participate.
+The repository now includes an experimental single-process solo CPU miner at `scripts/testnet-cpu-miner.py`. It uses the local node's `getblocktemplate` and `submitblock` RPCs, supports the BIP141 witness commitment and SegWit transactions, and can authenticate with the local RPC cookie. The candidate node bundle includes this miner after the package workflow passes.
 
-Do not claim that blocks are being produced until an independent miner has submitted a valid block and another independent node has accepted it.
+This is bootstrap/testing software, not an optimized ASIC miner, Stratum client, or pool. Follow [PUBLIC_TESTNET_MINING.md](PUBLIC_TESTNET_MINING.md) to create a wallet, connect to a verified peer and mine against your own node. Do not expose RPC port 29447. Blocks count as public network activity only when a second independent node receives and validates the same block.
 
 ## Before calling this a public release
 
