@@ -30,13 +30,6 @@ index 6029002..0000000 100644
      } else {
          return std::nullopt;
      }
-diff --git a/src/chainparamsbase.h b/src/chainparamsbase.h
-index 0000000..0000000 100644
---- a/src/chainparamsbase.h
-+++ b/src/chainparamsbase.h
-@@ -38,1 +38,1 @@ void SelectBaseParams(ChainType chain);
--#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest, unitedregtest"
-+#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest, unitedregtest, unitedtestnet"
 diff --git a/src/chainparamsbase.cpp b/src/chainparamsbase.cpp
 index f62e455..0000000 100644
 --- a/src/chainparamsbase.cpp
