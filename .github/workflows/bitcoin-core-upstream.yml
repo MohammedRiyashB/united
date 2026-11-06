@@ -101,8 +101,9 @@ jobs:
             echo "===== Starting ${label} (RPC ${rpcport}, P2P ${p2pport}) ====="
             if "$daemon" -chain=unitedregtest -datadir="$datadir" \
               -daemonwait=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" \
-              -rpcport="$rpcport" -port="$p2pport" -fallbackfee=0.0002 -debug=1 \
-              >"$startup_log" 2>&1; then
+              -rpcport="$rpcport" -port="$p2pport" -bind="127.0.0.1:$p2pport" \
+              -natpmp=0 -discover=0 -listenonion=0 \
+              -fallbackfee=0.0002 -debug=1 >"$startup_log" 2>&1; then
               cat "$startup_log"
               echo "===== ${label} initialized successfully ====="
             else
