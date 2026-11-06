@@ -15,6 +15,23 @@ These constants are used only by the isolated `unitedregtest` chain in `core/pat
 
 The genesis timestamp is deliberately historical so that it cannot be ahead of a node's adjusted clock. Its easy proof-of-work limit and no-retargeting configuration are private-regtest-only and must not be reused on a public testnet or mainnet. The expected hash is checked by native chain-parameter assertions and CI RPC tests.
 
+## Public testnet candidate genesis (not a release authorization)
+
+The native `unitedtestnet` candidate defines these constants in `core/patches/0002-add-united-public-testnet.patch`:
+
+- Timestamp: `1767225600` (2026-01-01 00:00:00 UTC)
+- Nonce: `15174`
+- Compact target (`nBits`): `0x1f00ffff`
+- PoW limit: `0000ffff00000000000000000000000000000000000000000000000000000000`
+- Merkle root: `63ba230a57da664d056cb02ed1dc34bd83a0c774bc1c7421ac6474ad97cf82ff`
+- Header hash: `00003b8e20fef32b7abc0c295c9bbce1931bc53f5688aeeb75301b997ba6bd00`
+- Coinbase reward: 50 UNITED to the conventional unspendable genesis output.
+- Coinbase timestamp text: `UNITED public testnet genesis - valueless coins - 2026`
+
+The standard-library verifier `scripts/verify-united-testnet-genesis.py` independently serializes the coinbase transaction and 80-byte header, recomputes the Merkle root and SHA-256d hash, and checks proof of work. CI runs this verifier before compiling the native daemon.
+
+These are candidate public-testnet constants. They require independent protocol review, network-identifier collision checks and a successful native two-node testnet CI run before any public testnet release. The public testnet currently has no DNS/fixed seed peers; manual `-addnode=<peer-ip>:29555` peering is required in the candidate build.
+
 ## Public-testnet and mainnet genesis requirements
 
 For each public network, the genesis block is a consensus constant, not an admin setting. It must be generated only after its complete network consensus parameters are reviewed.
