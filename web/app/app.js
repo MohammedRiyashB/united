@@ -187,14 +187,20 @@ window.addEventListener("united-google-connect", async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
     await signInWithPopup(auth, provider);
+    window.dispatchEvent(new Event("united-google-connected"));
   } catch (error) {
     console.error("UNITED Google connection error:", error);
     alert(explainAuthError(error));
   }
 });
 
+// Render the device wallet immediately; Firebase authentication is optional.
+mountUnitedWallet({ uid: "device" });
+$("auth-view").hidden = true;
+$("account-view").hidden = false;
+
 onAuthStateChanged(auth, (user) => {
-  // Wallet creation is the home screen. Google sign-in is optional and lives in Settings.
+  // Wallet creation remains the homepage whether or not the user is signed in.
   $("auth-view").hidden = true;
   $("account-view").hidden = false;
   if (user) {
