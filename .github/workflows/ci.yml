@@ -29,5 +29,11 @@ jobs:
         run: go test -race -count=1 ./...
       - name: Build CLI
         run: go build ./cmd/united-params ./cmd/united-powdemo
+      - name: Check browser P2P module syntax
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate browser P2P module syntax
+        run: node --check web/p2p/peer.js
       - name: Test public-testnet CPU miner serialization
         run: python3 scripts/test-testnet-cpu-miner.py
