@@ -4,10 +4,10 @@ import {
   setPersistence,
   browserLocalPersistence,
   onAuthStateChanged,
-  getRedirectResult,
   GoogleAuthProvider,
   GithubAuthProvider,
-  signInWithRedirect,
+  signInWithPopup,
+  linkWithPopup,
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -43,12 +43,14 @@ function setStatus(message, type = "info") {
 
 function explainAuthError(error) {
   const messages = {
-    "auth/api-key-not-valid": "Firebase rejected the web API key. This is a project/API-key configuration response, not a password error. The website is sending the configured key.",
+    "auth/api-key-not-valid": "Firebase rejected the configured web API key. Email and guest authentication working means the key is being accepted for those requests; check the provider configuration and the exact error below.",
     "auth/invalid-api-key": "The configured Firebase API key is invalid or unavailable for this project.",
     "auth/unauthorized-domain": "This website domain is not authorized in Firebase Authentication.",
-    "auth/operation-not-allowed": "This sign-in provider is disabled in Firebase Authentication.",
-    "auth/popup-blocked": "The browser blocked the sign-in window. Try again or allow pop-ups.",
-    "auth/account-exists-with-different-credential": "An account already exists with another sign-in method. Use that method to sign in.",
+    "auth/operation-not-allowed": "This sign-in provider is not enabled. Enable it in Firebase Authentication → Sign-in method.",
+    "auth/popup-blocked": "The browser blocked the sign-in window. Allow pop-ups for this site and try again.",
+    "auth/popup-closed-by-user": "The sign-in window was closed before authentication finished. Try again and complete the provider steps.",
+    "auth/account-exists-with-different-credential": "An account already exists with this email using another sign-in method. Sign in with that method first.",
+    "auth/credential-already-in-use": "This Google or GitHub account is already linked to another UNITED account. Sign in with that provider to access the existing account.",
     "auth/email-already-in-use": "An account already exists for this email address. Choose Sign in instead.",
     "auth/invalid-email": "Enter a valid email address.",
     "auth/weak-password": "Choose a stronger password with at least 6 characters.",
@@ -57,7 +59,9 @@ function explainAuthError(error) {
     "auth/network-request-failed": "Network request failed. Check your connection and try again.",
     "auth/too-many-requests": "Too many attempts. Wait a little before trying again."
   };
-  return messages[error?.code] || error?.message || "Authentication failed. Please try again.";
+  const code = error?.code || "unknown";
+  return (messages[code] || error?.message || "Authentication failed. Please try again.") +
+    (code !== "unknown" ? " (" + code + ")" : "");
 }
 
 function setBusy(busy, label = "Please wait…") {
@@ -75,6 +79,7 @@ async function runAuth(label, action) {
   setBusy(true, label);
   setStatus(label, "info");
   try {
+    await authReady;
     await action();
   } catch (error) {
     console.error("UNITED authentication error:", error);
@@ -93,23 +98,47 @@ function setMode(mode) {
     : "Sign in securely to access the UNITED testnet.";
   $("email-submit").textContent = signup ? "Create account" : "Sign in";
   $("mode-toggle").textContent = signup ? "Back to sign in" : "Create account";
+  $("mode-prompt").textContent = signup ? "Already registered?" : "New to UNITED?";
   $("password").autocomplete = signup ? "new-password" : "current-password";
   $("forgot-password").hidden = signup;
   setStatus("");
+}
+
+async function authenticateWithProvider(provider) {
+  const currentUser = auth.currentUser;
+
+  // Upgrade an anonymous session when possible, preserving its Firebase UID.
+  if (currentUser?.isAnonymous) {
+    try {
+      await linkWithPopup(currentUser, provider);
+      return;
+    } catch (error) {
+      // If this provider already belongs to an existing account, sign in to it.
+      if (error.code === "auth/credential-already-in-use") {
+        await signInWithPopup(auth, provider);
+        return;
+      }
+      throw error;
+    }
+  }
+
+  await signInWithPopup(auth, provider);
 }
 
 $("mode-toggle").addEventListener("click", () => {
   setMode(authMode === "signin" ? "signup" : "signin");
 });
 
-$("google").addEventListener("click", () => runAuth("Redirecting to Google…", async () => {
+$("google").addEventListener("click", () => runAuth("Opening Google sign-in…", async () => {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
-  await signInWithRedirect(auth, provider);
+  await authenticateWithProvider(provider);
 }));
 
-$("github").addEventListener("click", () => runAuth("Redirecting to GitHub…", async () => {
-  await signInWithRedirect(auth, new GithubAuthProvider());
+$("github").addEventListener("click", () => runAuth("Opening GitHub sign-in…", async () => {
+  const provider = new GithubAuthProvider();
+  provider.addScope("user:email");
+  await authenticateWithProvider(provider);
 }));
 
 $("guest").addEventListener("click", () => runAuth("Starting a guest session…", async () => {
@@ -147,18 +176,7 @@ $("logout").addEventListener("click", () => runAuth("Signing out…", async () =
   await signOut(auth);
 }));
 
-async function initializeAuth() {
-  try {
-    await setPersistence(auth, browserLocalPersistence);
-    const redirectResult = await getRedirectResult(auth);
-    if (redirectResult?.user) {
-      setStatus("Sign-in completed successfully.", "success");
-    }
-  } catch (error) {
-    console.error("UNITED auth initialization error:", error);
-    setStatus(explainAuthError(error), "error");
-  }
-}
+const authReady = setPersistence(auth, browserLocalPersistence);
 
 onAuthStateChanged(auth, (user) => {
   $("auth-view").hidden = Boolean(user);
@@ -168,9 +186,22 @@ onAuthStateChanged(auth, (user) => {
       ? "Guest account · " + user.uid
       : (user.email || user.displayName || user.uid);
     $("account-identity").textContent = identity;
-    $("account-provider").textContent = user.isAnonymous ? "Anonymous session" : "Verified Firebase session";
+    const providerIds = (user.providerData || []).map((item) => item.providerId);
+    const providerLabel = user.isAnonymous
+      ? "Anonymous session"
+      : providerIds.length
+        ? "Signed in with " + providerIds.map((id) => ({
+            "google.com": "Google",
+            "github.com": "GitHub",
+            "password": "Email and password"
+          }[id] || id)).join(", ")
+        : "Verified Firebase session";
+    $("account-provider").textContent = providerLabel;
     setStatus("");
   }
 });
 
-initializeAuth();
+authReady.catch((error) => {
+  console.error("UNITED Firebase persistence initialization error:", error);
+  setStatus(explainAuthError(error), "error");
+});
