@@ -1,3 +1,4 @@
+import { mountUnitedWallet } from "./wallet.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getAuth,
@@ -182,6 +183,7 @@ onAuthStateChanged(auth, (user) => {
   $("auth-view").hidden = Boolean(user);
   $("account-view").hidden = !user;
   if (user) {
+    mountUnitedWallet(user);
     const identity = user.isAnonymous
       ? "Guest account · " + user.uid
       : (user.email || user.displayName || user.uid);
