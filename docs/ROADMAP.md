@@ -1,7 +1,6 @@
 # UNITED Development Roadmap
 
-**Current implementation checkpoint — 2026-11-06:** the Bitcoin Core v32.1-derived private `unitedregtest` chain type is implemented on the integration branch. The original native build/genesis smoke test passed. The two-node functional sequence exposed a future-dated genesis timestamp; the timestamp, nonce and hash have been corrected and a fresh native CI validation is running. Public testnet is the next network milestone, but it is not ready to release until every item in [PUBLIC_TESTNET_GO_NO_GO.md](PUBLIC_TESTNET_GO_NO_GO.md) is evidenced and independently reviewed.
-
+**Current implementation checkpoint — 2026-11-06:** private `unitedregtest` passed the full two-node CI sequence, including mining, wallet, transaction confirmation and P2P synchronization (run [42157048924](https://github.com/MohammedRiyashB/united/actions/runs/42157048924)). A separate `feature/united-public-testnet` branch now adds a candidate `unitedtestnet` native chain type, unique genesis/network identifiers, an independent genesis verifier and two-node public-testnet CI. Public-testnet native validation is pending. There are no public seed servers, downloadable binaries or independent operator network deployments yet; do not describe the public testnet as launched.
 
 Dates are deliberately not promised. Each phase exits only when its acceptance criteria pass.
 
@@ -35,7 +34,8 @@ Dates are deliberately not promised. Each phase exits only when its acceptance c
 
 ## Phase 3 — Public testnet
 
-- Independently operated seed nodes and full nodes.
+- Candidate native `unitedtestnet` chain parameters and deterministic genesis are implemented; finish native CI and independent review.
+- Deploy independently operated seed/bootstrap nodes and full nodes.
 - Public node binaries and setup documentation.
 - Wallet address, backup, restore, send/receive and PSBT flows.
 - Mining pool/client testnet deployment.
