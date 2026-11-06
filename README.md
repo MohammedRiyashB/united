@@ -2,7 +2,7 @@
 
 **United** is a proposed independent, SHA-256d proof-of-work cryptocurrency with a UTXO ledger and a nominal supply cap of 21,000,000 UNITED.
 
-> **Project status: engineering specification + tested monetary-policy and regtest PoW prototypes. Not a live blockchain.** This repository does not yet contain a production full node, peer-to-peer network, mining implementation, wallet, genesis block, seed nodes, explorer, or audited consensus code. Do not send funds to an address claiming to be a UNITED mainnet address. No UNITED mainnet coins currently exist.
+> **Project status: Bitcoin Core-derived native private-regtest integration is under functional validation. Not a public network or mainnet.** The integration branch adds a private `unitedregtest` chain to pinned Bitcoin Core v32.1, including a deterministic development genesis and inherited node, wallet, mining-RPC and P2P machinery. The two-node mining/transaction/P2P CI sequence has not yet passed after the genesis-time correction. Public-testnet parameters, public seed peers, release binaries and independent audit are not complete. Do not send real funds or treat testnet coins as having value. No UNITED mainnet coins exist.
 
 ## Current agreed design
 
@@ -30,12 +30,14 @@ The exact scheduled subsidy issuance after smallest-unit integer halving is **20
 | Architecture, threat model, roadmap | Drafted |
 | Monetary schedule reference implementation | Implemented and unit-tested |
 | SHA-256d header PoW demo | Implemented and unit-tested (regtest only) |
-| Network identities / genesis block | Not generated; deliberately unset |
-| Production blockchain core | Not implemented |
-| P2P node, miner, pool | Not implemented |
-| Mobile / desktop wallet | Not implemented |
-| Explorer / indexer / API | Not implemented |
-| Testnet | Not running |
+| Private `unitedregtest` chain parameters/genesis | Implemented in native patch; functional mining validation pending |
+| Bitcoin Core-derived full-node daemon/CLI | Builds in CI; private regtest startup/genesis smoke test passed |
+| Private-regtest mining, wallet, transaction, P2P | Two-node end-to-end CI validation pending |
+| Public testnet chain parameters/genesis/seeds | Not implemented |
+| Mainnet chain parameters/genesis | Not implemented |
+| Mobile / desktop wallet release | Not implemented |
+| Explorer / indexer / API | Contract draft only; not implemented |
+| Public testnet | Not running |
 | Mainnet | Not launched; not launch-ready |
 | External audit | Not performed |
 
