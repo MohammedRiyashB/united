@@ -13,11 +13,14 @@
 | Base58 pubkey / script / WIF | `75 / 76 / 203` |
 | Genesis hash | `0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1` |
 | Genesis time / nonce | `1793937600` / `3565` (2026-11-06 04:00 UTC) |
+| Genesis hash | `0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1` |
 | Genesis Merkle root | `d913e5cf8a09ccf5d4382c4a1e78d8e8b62c9bc0538240c05b26e2baa1d35446` |
 | Subsidy / halving | `50 UNITED / 210,000 blocks` |
 | Target spacing / retarget | `600 seconds / 2,016 blocks` |
 
 All coins on this network are valueless test coins. These values are testnet candidates and must not be reused for mainnet.
+
+**Launch-window note:** the candidate genesis timestamp is 2026-11-06 04:00 UTC so that a newly started chain can request block templates during the initial testnet launch window instead of remaining in initial block download because its tip is older than the node's maximum tip age. If the public testnet launch is delayed beyond 24 hours from this timestamp, re-check the initial-block-download/mining bootstrap procedure before freezing the genesis. Once public nodes have accepted blocks, do not change genesis.
 
 ## Build the candidate node
 
