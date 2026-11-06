@@ -1,4 +1,5 @@
 import { Wallet } from "https://cdn.jsdelivr.net/npm/ethers@6.13.5/+esm";
+import { NETWORKS, deriveMultiChainAccounts, readNetworkState, verifyTransactionStatus, addressForNetwork } from "./chains.js";
 
 let KEY = "united.wallet.v1.device";
 let wallets = [];
@@ -7,6 +8,9 @@ let unlockedPassword = null;
 let activeWallet = null;
 let currentUser = null;
 let importKind = "phrase";
+let activeChainId = localStorage.getItem("united.active.network") || "bitcoin";
+let networkStates = {};
+let networkRefreshToken = 0;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const short = (s) => s ? s.slice(0, 8) + "…" + s.slice(-6) : "";
@@ -161,9 +165,13 @@ function renderCreatePassword() {
     const p=$("new-vault-password").value;
     if(p!==$("confirm-vault-password").value){$("wallet-inline-error").textContent="The passwords do not match."; $("wallet-inline-error").hidden=false;return;}
     try{
+      const submit=$("create-vault-form").querySelector('button[type="submit"]');
+      submit.disabled=true; submit.textContent="Initializing five mainnets…";
       const generated=Wallet.createRandom();
       const phrase=generated.mnemonic.phrase;
-      const created={id:crypto.randomUUID(),name:"My United Wallet",address:Wallet.fromPhrase(phrase).address,secretType:"mnemonic",secret:phrase,createdAt:Date.now()};
+      const evmAddress=Wallet.fromPhrase(phrase).address;
+      const chainAccounts=await deriveMultiChainAccounts(phrase,evmAddress);
+      const created={id:crypto.randomUUID(),name:"My UNITED Wallet",address:evmAddress,chainAccounts,secretType:"mnemonic",secret:phrase,createdAt:Date.now()};
       wallets=[created];activeWallet=created;activeWalletId=created.id;unlockedPassword=p;
       await saveVault(p);renderPhrase(phrase);
     }catch(err){$("wallet-inline-error").textContent=err.message||"Wallet creation failed."; $("wallet-inline-error").hidden=false;}
@@ -199,7 +207,7 @@ function renderImport() {
       <form class="uw-form" id="import-form">
         <label id="import-secret-label" for="import-secret">Recovery phrase</label>
         <textarea id="import-secret" rows="4" placeholder="Enter your recovery phrase (12 or 24 words)" required></textarea>
-        <label for="import-name">Wallet name</label><input id="import-name" value="Imported United Wallet" required>
+        <label for="import-name">Wallet name</label><input id="import-name" value="Imported UNITED Wallet" required>
         <label for="import-password">Wallet password (10+ characters)</label><input id="import-password" type="password" minlength="10" autocomplete="new-password" placeholder="Create local vault password" required>
         <button class="uw-btn uw-btn-primary" type="submit">Import wallet <b>›</b></button>
         <p id="wallet-inline-error" class="uw-inline-error" hidden></p>
@@ -226,7 +234,14 @@ function renderImport() {
         imported=new Wallet(secret);normalizedSecret=secret;
       }
       const p=$("import-password").value;
-      const entry={id:crypto.randomUUID(),name:$("import-name").value.trim()||"Imported United Wallet",address:imported.address,secretType:importKind==="phrase"?"mnemonic":"privateKey",secret:normalizedSecret,createdAt:Date.now()};
+      const chainAccounts=importKind==="phrase"
+        ? await deriveMultiChainAccounts(normalizedSecret,imported.address)
+        : {
+            ethereum:{address:imported.address,path:"imported EVM private key"},
+            polygon:{address:imported.address,path:"imported EVM private key"},
+            bsc:{address:imported.address,path:"imported EVM private key"}
+          };
+      const entry={id:crypto.randomUUID(),name:$("import-name").value.trim()||"Imported UNITED Wallet",address:imported.address,chainAccounts,secretType:importKind==="phrase"?"mnemonic":"privateKey",secret:normalizedSecret,createdAt:Date.now()};
       if(wallets.length && unlockedPassword!==p)throw new Error("Unlock your existing wallet first to add another wallet.");
       wallets.push(entry);activeWallet=entry;activeWalletId=entry.id;unlockedPassword=p;
       await saveVault(p);renderGoogleOffer();
@@ -281,62 +296,225 @@ function renderBackupOffer() {
 
 function renderDashboard() {
   if(!activeWallet){if(localStorage.getItem(KEY)){renderVaultUnlock();return;}renderHome();return;}
-  const w=activeWallet;
-  pageShell(`
+  const selectedNetwork=NETWORKS.find(n=>n.id===activeChainId)||NETWORKS[0];
+  activeChainId=selectedNetwork.id;
+  const selectedAddress=addressForNetwork(activeWallet,selectedNetwork.id);
+  const selectedState=networkStates[selectedNetwork.id];
+  pageShell(\`
     <div class="uw-dashboard">
       <header class="uw-dashboard-header">
-        <div class="uw-dashboard-brand">${logoMark(34)}<b>UNITED</b></div>
-        <div class="uw-header-actions"><button aria-label="Scan" title="Scan" data-coming="Scanner">⌗</button><button aria-label="Notifications" title="Notifications" data-coming="Notifications">♧</button></div>
+        <div class="uw-dashboard-brand">\${logoMark(34)}<b>UNITED</b></div>
+        <div class="uw-header-actions"><button aria-label="Refresh network data" title="Refresh" id="refresh-networks">↻</button><button aria-label="Notifications" title="Notifications" data-coming="Notifications">♧</button></div>
       </header>
-      <div class="uw-network-select"><span class="uw-live-dot"></span> UNITED WALLET <span>⌄</span></div>
-      <section class="uw-total-card"><div class="uw-total-heading">Total Balance <span>◉</span></div><div class="uw-total-value">— <small>UNIT</small></div><div class="uw-total-foot">Live balance unavailable · Testnet</div><div class="uw-total-logo">${logoMark(115)}</div></section>
+      <label class="uw-network-label" for="network-picker">ACTIVE MAINNET</label>
+      <select class="uw-network-picker" id="network-picker">\${NETWORKS.map(n=>\`<option value="\${n.id}" \${n.id===activeChainId?"selected":""}>\${esc(n.name)}</option>\`).join("")}</select>
+      <section class="uw-total-card">
+        <div class="uw-total-heading">Native balance · \${esc(selectedNetwork.name)}</div>
+        <div class="uw-total-value" id="selected-balance">\${selectedState?.online?esc(selectedState.balance):"—"} <small>\${selectedNetwork.symbol}</small></div>
+        <div class="uw-total-foot" id="selected-network-status">\${selectedState?.online?"Verified mainnet connection":"Checking real mainnet connection…"}</div>
+        <div class="uw-total-logo">\${logoMark(100)}</div>
+      </section>
       <div class="uw-action-grid">
-        <button id="send-action"><span>↗</span>Send</button>
+        <button id="send-action" disabled title="Send is locked until chain-specific signing and broadcast tests pass"><span>↗</span>Send</button>
         <button id="receive-action"><span>↓</span>Receive</button>
         <button id="swap-action"><span>⇄</span>Swap</button>
         <button id="buy-action"><span>▣</span>Buy</button>
       </div>
-      <section class="uw-assets-section"><div class="uw-section-heading"><b>My Assets</b><button id="assets-view">View all ›</button></div>
-        <div class="uw-asset-row"><div class="uw-asset-icon">${logoMark(34)}</div><div class="uw-asset-copy"><b>UNITED (UNIT)</b><small>Unitedd Network native asset</small></div><div class="uw-asset-amount"><b>— UNIT</b><small>Balance unavailable</small></div></div>
+      <section class="uw-assets-section">
+        <div class="uw-section-heading"><b>All networks</b><button id="refresh-list">Refresh ›</button></div>
+        <div class="uw-chain-list" id="chain-list">\${NETWORKS.map(n=>renderNetworkRow(n)).join("")}</div>
       </section>
-      <section class="uw-activity-section"><div class="uw-section-heading"><b>Recent Activity</b><button id="activity-view">View all ›</button></div><div class="uw-activity-empty"><span>↘</span><b>No transactions yet</b><small>Your UNITED network activity will appear here.</small></div></section>
-      <div class="uw-address-strip"><span>${esc(short(w.address))}</span><button id="copy-address">Copy address</button></div>
+      <section class="uw-activity-section">
+        <div class="uw-section-heading"><b>Recent activity · \${esc(selectedNetwork.symbol)}</b><button id="activity-view">View all ›</button></div>
+        <div class="uw-activity-empty" id="dashboard-activity"><span>↘</span><b>Loading verified activity</b><small>Only chain-reported transactions will be shown.</small></div>
+      </section>
+      <div class="uw-address-strip"><span id="selected-address">\${selectedAddress?esc(short(selectedAddress)):"No address for this import"}</span><button id="copy-address" \${selectedAddress?"":"disabled"}>Copy address</button></div>
+      <p class="uw-form-hint">Public mainnet RPCs may be rate-limited. Balances are chain-reported native coin amounts, not fiat valuations.</p>
       <nav class="uw-bottom-nav"><button class="active" data-nav="dashboard"><span>⌂</span>Home</button><button data-nav="activity"><span>◷</span>Activity</button><button data-nav="explore"><span>◈</span>Explore</button><button data-nav="settings"><span>⚙</span>Settings</button></nav>
       <div id="wallet-notice" class="uw-notice" hidden></div>
     </div>
-  `);
-  $("send-action").onclick=()=>showInfo("Send UNIT","Sending is disabled until the UNITED RPC endpoint, chain ID, fee estimation and transaction broadcaster are connected and verified. No fake transactions will be shown.");
+  \`);
+  $("network-picker").onchange=e=>{activeChainId=e.target.value;localStorage.setItem("united.active.network",activeChainId);renderDashboard();};
+  $("refresh-networks").onclick=refreshAllNetworkStates;
+  $("refresh-list").onclick=refreshAllNetworkStates;
+  $("send-action").onclick=()=>showInfo("Send temporarily unavailable","UNITED will enable sending only after each network's signing, fee estimation, transaction broadcast and confirmation workflow passes end-to-end testing. No transaction will be simulated.");
   $("receive-action").onclick=renderReceive;
-  $("swap-action").onclick=()=>showInfo("Swap","Swap will be available when a verified UNITED exchange route is connected.");
-  $("buy-action").onclick=()=>showInfo("Buy UNIT","Buy is not available on this testnet yet.");
-  $("assets-view").onclick=()=>showInfo("Your assets","UNIT is the native asset currently configured in this wallet interface.");
+  $("swap-action").onclick=()=>showInfo("Swap not initialized","Swap routes, quotes, approval handling and execution are not yet connected.");
+  $("buy-action").onclick=()=>showInfo("Buy crypto not initialized","Fiat on-ramp providers and regional availability have not yet been integrated.");
   $("activity-view").onclick=()=>navigate("activity");
-  $("copy-address").onclick=async()=>{try{await navigator.clipboard.writeText(w.address);setNotice("Wallet address copied.","success");}catch{showInfo("Wallet address",esc(w.address));}};
+  $("copy-address").onclick=async()=>{const addr=addressForNetwork(activeWallet,activeChainId);if(!addr)return;try{await navigator.clipboard.writeText(addr);setNotice("Public address copied.","success");}catch{showInfo("Public address",esc(addr));}};
+  document.querySelectorAll("[data-chain]").forEach(b=>b.onclick=()=>{activeChainId=b.dataset.chain;localStorage.setItem("united.active.network",activeChainId);renderDashboard();});
   document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=()=>navigate(b.dataset.nav));
   document.querySelectorAll("[data-coming]").forEach(b=>b.onclick=()=>showInfo(b.dataset.coming,"This feature is not connected yet."));
+  updateDashboardNetworkSummary();
+  refreshAllNetworkStates();
+}
+
+function renderNetworkRow(network) {
+  const address=addressForNetwork(activeWallet,network.id);
+  const state=networkStates[network.id];
+  const selected=network.id===activeChainId;
+  const balance=state?.online?state.balance+" "+network.symbol:(address?(state?.error||"Connecting…"):"Address unavailable for this import");
+  const status=state?.online?"RPC verified · block "+Number(state.blockHeight||0).toLocaleString():(state?.error||"Not checked");
+  return \`<button class="uw-chain-row \${selected?"selected":""}" data-chain="\${network.id}">
+    <span class="uw-chain-symbol">\${network.id==="bitcoin"?"₿":network.id==="ethereum"?"Ξ":network.id==="polygon"?"⬡":network.id==="solana"?"◎":"◆"}</span>
+    <span class="uw-chain-copy"><b>\${esc(network.name)}</b><small>\${address?esc(short(address)):"No derived address"}</small></span>
+    <span class="uw-chain-balance"><b>\${esc(balance)}</b><small>\${esc(status)}</small></span>
+  </button>\`;
+}
+
+function updateDashboardNetworkSummary() {
+  const network=NETWORKS.find(n=>n.id===activeChainId)||NETWORKS[0];
+  const state=networkStates[network.id];
+  const address=addressForNetwork(activeWallet,network.id);
+  const balance=$("selected-balance");
+  const status=$("selected-network-status");
+  const addressLine=$("selected-address");
+  const copy=$("copy-address");
+  if(balance)balance.innerHTML=(state?.online?esc(state.balance):"—")+ " <small>"+network.symbol+"</small>";
+  if(status)status.textContent=state?.online
+    ? "Network verified · "+state.source+" · Block "+Number(state.blockHeight||0).toLocaleString()
+    : (state?.error||"Checking real mainnet connection…");
+  if(addressLine)addressLine.textContent=address?short(address):"Address unavailable for this import";
+  if(copy)copy.disabled=!address;
+  const list=$("chain-list");
+  if(list)list.innerHTML=NETWORKS.map(n=>renderNetworkRow(n)).join("");
+  const activity=$("dashboard-activity");
+  if(activity){
+    const history=state?.history;
+    if(Array.isArray(history)&&history.length){
+      activity.innerHTML=history.slice(0,3).map(tx=>\`<div class="uw-mini-tx"><b>\${tx.confirmed?"Confirmed":"Pending"} · \${esc(network.symbol)}</b><small>\${esc(short(tx.id))} · \${tx.timestamp?new Date(tx.timestamp*1000).toLocaleString():"time unavailable"}</small></div>\`).join("");
+    }else if(state?.online){
+      activity.innerHTML=\`<b>No indexed recent activity</b><small>\${esc(state.historyNote||"No transactions were returned for this address.")}</small>\`;
+    }else{
+      activity.innerHTML=\`<b>Activity unavailable</b><small>\${esc(state?.error||"Waiting for network connection.")}</small>\`;
+    }
+  }
+}
+
+async function refreshAllNetworkStates() {
+  if(!activeWallet)return;
+  const token=++networkRefreshToken;
+  const tasks=NETWORKS.map(async network=>{
+    const address=addressForNetwork(activeWallet,network.id);
+    if(!address){
+      networkStates[network.id]={id:network.id,online:false,error:"Import a recovery phrase to derive this network address."};
+      return;
+    }
+    networkStates[network.id]=await readNetworkState(network.id,address);
+  });
+  await Promise.all(tasks);
+  if(token!==networkRefreshToken||!$("chain-list"))return;
+  updateDashboardNetworkSummary();
 }
 
 function renderReceive() {
-  const w=activeWallet;
-  pageShell(`
+  const defaultNetwork=NETWORKS.find(n=>n.id===activeChainId)||NETWORKS[0];
+  pageShell(\`
     <div class="uw-flow-page">
-      <header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">RECEIVE ASSET</span></header>
-      <h1>Receive UNIT</h1><p class="uw-subtitle">Share this public address to receive native UNIT on the UNITED network.</p>
-      <div class="uw-receive-card"><div class="uw-receive-icon">${logoMark(58)}</div><b>United wallet address</b><code>${esc(w.address)}</code><button class="uw-btn uw-btn-primary" id="copy-receive-address">Copy address</button></div>
-      <p class="uw-form-hint">Only share your public address. Never share your private key or recovery phrase.</p>
-    </div>`);
+      <header class="uw-flow-header">\${backButton("dashboard")}<span class="uw-step-label">RECEIVE CRYPTO</span></header>
+      <h1>Receive assets</h1>
+      <p class="uw-subtitle">Choose the exact mainnet. Only send the selected asset over its matching network.</p>
+      <label class="uw-network-label" for="receive-network">NETWORK</label>
+      <select class="uw-network-picker" id="receive-network">\${NETWORKS.map(n=>\`<option value="\${n.id}" \${n.id===defaultNetwork.id?"selected":""}>\${esc(n.name)} · \${n.symbol}</option>\`).join("")}</select>
+      <div class="uw-receive-card">
+        <div class="uw-receive-icon">\${logoMark(58)}</div>
+        <b id="receive-asset-name">\${esc(defaultNetwork.name)} address</b>
+        <code id="receive-address">\${esc(addressForNetwork(activeWallet,defaultNetwork.id)||"Not available for this import")}</code>
+        <button class="uw-btn uw-btn-primary" id="copy-receive-address" \${addressForNetwork(activeWallet,defaultNetwork.id)?"":"disabled"}>Copy address</button>
+      </div>
+      <div class="uw-warning"><b>Network matching is critical.</b><span>Bitcoin must be sent to the Bitcoin address, Solana to the Solana address, and EVM assets to the matching EVM chain. Sending on the wrong network can permanently lose funds.</span></div>
+      <p class="uw-form-hint">Your public address can be shared. Never share the recovery phrase or private keys.</p>
+    </div>\`);
   bindBack("dashboard");
-  $("copy-receive-address").onclick=async()=>{try{await navigator.clipboard.writeText(w.address);$("copy-receive-address").textContent="Address copied";}catch{$("copy-receive-address").textContent="Copy unavailable";}};
+  const update=()=>{
+    const network=NETWORKS.find(n=>n.id===$("receive-network").value)||NETWORKS[0];
+    const address=addressForNetwork(activeWallet,network.id);
+    $("receive-asset-name").textContent=network.name+" address";
+    $("receive-address").textContent=address||"Not available for this import";
+    $("copy-receive-address").disabled=!address;
+  };
+  $("receive-network").onchange=update;
+  $("copy-receive-address").onclick=async()=>{
+    const network=NETWORKS.find(n=>n.id===$("receive-network").value)||NETWORKS[0];
+    const address=addressForNetwork(activeWallet,network.id);
+    if(!address)return;
+    try{await navigator.clipboard.writeText(address);$("copy-receive-address").textContent="Address copied";}
+    catch{$("copy-receive-address").textContent="Copy unavailable";}
+  };
 }
 
 function renderActivity() {
-  pageShell(`<div class="uw-flow-page"><header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">ON-CHAIN HISTORY</span></header><h1>Activity</h1><p class="uw-subtitle">Your UNITED transaction history.</p><div class="uw-activity-empty uw-activity-large"><span>↘</span><b>No transactions yet</b><small>Activity will appear after the network RPC is connected.</small></div></div>`);
+  const network=NETWORKS.find(n=>n.id===activeChainId)||NETWORKS[0];
+  pageShell(\`
+    <div class="uw-flow-page">
+      <header class="uw-flow-header">\${backButton("dashboard")}<span class="uw-step-label">ON-CHAIN HISTORY</span></header>
+      <h1>Activity</h1>
+      <p class="uw-subtitle">Transactions are fetched from the selected mainnet's public data source.</p>
+      <label class="uw-network-label" for="activity-network">NETWORK</label>
+      <select class="uw-network-picker" id="activity-network">\${NETWORKS.map(n=>\`<option value="\${n.id}" \${n.id===network.id?"selected":""}>\${esc(n.name)}</option>\`).join("")}</select>
+      <div id="activity-list" class="uw-activity-list"><div class="uw-activity-empty"><span>◷</span><b>Loading on-chain history</b><small>Reading public network data…</small></div></div>
+      <p class="uw-form-hint">Ethereum, Polygon and BNB standard JSON-RPC endpoints do not provide address-indexed history. Use the chain explorer for full indexed history.</p>
+    </div>\`);
   bindBack("dashboard");
+  const load=()=>{
+    activeChainId=$("activity-network").value;
+    const state=networkStates[activeChainId];
+    const list=$("activity-list");
+    if(!list)return;
+    if(!state){
+      list.innerHTML='<div class="uw-activity-empty"><b>Network data not loaded</b><small>Return to Home and refresh the network list.</small></div>';
+      return;
+    }
+    if(!state.online){
+      list.innerHTML=\`<div class="uw-activity-empty"><b>Unable to load history</b><small>\${esc(state.error||"Provider unavailable")}</small></div>\`;
+      return;
+    }
+    if(!Array.isArray(state.history)){
+      const net=NETWORKS.find(n=>n.id===activeChainId);
+      list.innerHTML=\`<div class="uw-activity-empty"><b>History indexer not connected</b><small>\${esc(state.historyNote||"This RPC provides balances and chain status only.")}</small><a href="\${net.explorer}" target="_blank" rel="noopener noreferrer">Open \${esc(net.name)} explorer</a></div>\`;
+      return;
+    }
+    if(!state.history.length){
+      list.innerHTML='<div class="uw-activity-empty"><b>No transactions found</b><small>No transactions were returned for this public address.</small></div>';
+      return;
+    }
+    list.innerHTML=state.history.map((tx,i)=>\`
+      <article class="uw-history-row">
+        <div><b>\${tx.failed?"Failed":tx.confirmed?"Confirmed":"Pending"}</b><small>\${esc(short(tx.id))} · \${tx.timestamp?new Date(tx.timestamp*1000).toLocaleString():"time unavailable"}</small></div>
+        <div class="uw-history-actions"><button data-check-tx="\${i}">Verify</button><a href="\${tx.explorerUrl}" target="_blank" rel="noopener noreferrer">Explorer</a></div>
+        <p class="uw-history-result" id="tx-check-\${i}"></p>
+      </article>\`).join("");
+    list.querySelectorAll("[data-check-tx]").forEach(button=>button.onclick=async()=>{
+      const tx=state.history[Number(button.dataset.checkTx)];
+      const output=$("tx-check-"+button.dataset.checkTx);
+      button.disabled=true;button.textContent="Checking…";
+      try{
+        const verified=await verifyTransactionStatus(activeChainId,tx.id);
+        output.textContent=verified.failed?"On-chain execution failed.":verified.confirmed?"Confirmed by network.":verified.included?"Included; awaiting stronger confirmation.":"Not found or still pending.";
+      }catch(err){output.textContent="Verification unavailable: "+err.message;}
+      button.disabled=false;button.textContent="Verify";
+    });
+  };
+  $("activity-network").onchange=load;
+  load();
 }
+
 function renderExplore() {
-  pageShell(`<div class="uw-flow-page"><header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">UNITED WALLET</span></header><h1>Explore</h1><p class="uw-subtitle">Discover the UNITED public testnet.</p><div class="uw-explore-card"><div class="uw-explore-mark">${logoMark(60)}</div><b>United Network</b><span>Native asset · UNIT</span><p>Experimental testnet. No real-value assets. Network tools will appear here as they become available.</p></div></div>`);
+  pageShell(\`
+    <div class="uw-flow-page">
+      <header class="uw-flow-header">\${backButton("dashboard")}<span class="uw-step-label">SUPPORTED MAINNETS</span></header>
+      <h1>Explore networks</h1>
+      <p class="uw-subtitle">UNITED is initialized with five independent mainnets. Each uses its own address format, transaction rules and explorer.</p>
+      <div class="uw-explore-network-list">\${NETWORKS.map(n=>\`
+        <article class="uw-explore-network">
+          <b>\${esc(n.name)}</b><span>\${n.symbol} · \${n.family==="evm"?"EVM-compatible network":n.family==="utxo"?"Bitcoin UTXO network":"Solana account-based network"}</span>
+          <a href="\${n.explorer}" target="_blank" rel="noopener noreferrer">Open block explorer ↗</a>
+        </article>\`).join("")}</div>
+    </div>\`);
   bindBack("dashboard");
 }
+
 function renderSettings() {
   pageShell(`
     <div class="uw-flow-page">
@@ -402,10 +580,27 @@ function renderVaultUnlock() {
       <form class="uw-form" id="unlock-form"><label for="vault-password">Wallet password</label><input id="vault-password" type="password" autocomplete="current-password" required minlength="10"><button class="uw-btn uw-btn-primary">Unlock wallet <b>›</b></button><p id="wallet-inline-error" class="uw-inline-error" hidden></p></form>
     </div>`);
   bindBack("home");
-  $("unlock-form").onsubmit=async e=>{e.preventDefault();try{wallets=await loadVault($("vault-password").value);if(!wallets.length)throw new Error("No wallet found in this backup.");unlockedPassword=$("vault-password").value;activeWallet=wallets.find(w=>w.id===activeWalletId)||wallets[0];activeWalletId=activeWallet.id;renderDashboard();}catch(err){$("wallet-inline-error").textContent="Incorrect password or damaged local vault."; $("wallet-inline-error").hidden=false;}};
+  $("unlock-form").onsubmit=async e=>{
+    e.preventDefault();
+    try{
+      wallets=await loadVault($("vault-password").value);
+      if(!wallets.length)throw new Error("No wallet found in this backup.");
+      unlockedPassword=$("vault-password").value;
+      activeWallet=wallets.find(w=>w.id===activeWalletId)||wallets[0];
+      activeWalletId=activeWallet.id;
+      if(activeWallet.secretType==="mnemonic"&&!activeWallet.chainAccounts){
+        activeWallet.chainAccounts=await deriveMultiChainAccounts(secretOf(activeWallet),activeWallet.address);
+        await saveVault(unlockedPassword);
+      }
+      renderDashboard();
+    }catch(err){
+      $("wallet-inline-error").textContent=err.message||"Incorrect password or damaged local vault.";
+      $("wallet-inline-error").hidden=false;
+    }
+  };
 }
 function renderDashboardIfUnlocked(){if(activeWallet)renderDashboard();else if(localStorage.getItem(KEY))renderVaultUnlock();else renderHome();}
-export function mountUniteddWallet(user={uid:"device"}) {
+export function mountUnitedWallet(user={uid:"device"}) {
   currentUser=user;
   // Wallets are device-local. Optional Google auth never moves private keys to cloud storage.
   KEY="united.wallet.v1.device";
