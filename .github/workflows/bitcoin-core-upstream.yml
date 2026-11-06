@@ -136,7 +136,7 @@ jobs:
           wait_rpc rpc1
           wait_rpc rpc2
 
-          expected="2739e631581bbb86a9dfe9827c2ba84ff1ca53a96e0fbaa809784b351540c44a"
+          expected="6d8278642c6e1390286c74bd2697c5251771e9da1b860a5bd3d692b5d0ead151"
           actual="$("$cli" "${rpc1[@]}" getblockhash 0)"
           test "$actual" = "$expected"
           test "$("$cli" "${rpc2[@]}" getblockhash 0)" = "$expected"
