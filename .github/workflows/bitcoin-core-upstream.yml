@@ -12,6 +12,8 @@ on:
       - "core/upstream.lock.toml"
       - "core/patches/**"
       - "scripts/bootstrap-bitcoin-core.sh"
+      - "scripts/verify-united-testnet-genesis.py"
+      - "scripts/build-united-node.sh"
   workflow_dispatch:
 
 permissions:
@@ -19,7 +21,7 @@ permissions:
 
 jobs:
   native-united-regtest:
-    name: Clone, patch, compile and smoke-test UNITED regtest
+    name: Clone, patch, compile and test UNITED regtest and public testnet
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
