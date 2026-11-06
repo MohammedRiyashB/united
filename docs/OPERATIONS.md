@@ -7,6 +7,20 @@
 - Never reuse production credentials, signing keys or data directories across networks.
 - Testnet coins are valueless and must be clearly labelled.
 
+## UNITED public-testnet candidate
+
+The `unitedtestnet` candidate uses P2P port `29555`, RPC port `29554`, message magic `756e7431`, and Bech32 HRP `unt`. It currently has **no DNS seeds or fixed seeds**. An operator must obtain a verified peer endpoint from the project maintainers and add it manually using `-addnode=<peer-ip>:29555`. Do not invent or publish an IP address that is not actually operated and reachable.
+
+The candidate should not be announced as a live public testnet until native two-node CI passes, multiple independent peers are online, the genesis/network parameters are independently reviewed, and signed release artifacts and operator documentation are published. Testnet coins have no value.
+
+Example command shape after building the patched node:
+
+```bash
+bitcoind -chain=unitedtestnet -addnode=<verified-peer-ip>:29555
+```
+
+Keep RPC bound to localhost/private interfaces. Never expose wallet/admin RPC to the public internet.
+
 ## Full-node operator baseline
 
 - Dedicated supported Linux host; non-root service account.
