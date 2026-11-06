@@ -90,7 +90,7 @@ async function createFlow(){
   $("create-vault-form").onsubmit=async e=>{e.preventDefault();const p=$("new-vault-password").value;if(p!==$("confirm-vault-password").value){setNotice("Passwords do not match.","error");return;}const w=Wallet.createRandom();const phrase=w.mnemonic.phrase;const derived=Wallet.fromPhrase(phrase);wallets=[{id:crypto.randomUUID(),name:"My UNITED Wallet",address:derived.address,phrase,createdAt:Date.now()}];activeWalletId=wallets[0].id;unlockedPassword=p;activeWallet=wallets[0];await saveVault(p);phraseFlow(phrase);};
 }
 function accountSyncFlow(){
-  showModal("Save and sync your wallet?",`<p class="wallet-muted">Connect a Google account to associate this wallet with your UNITED account. This is optional. Your recovery phrase and private keys stay encrypted locally and are never uploaded.</p><button class="wallet-primary" id="connect-google-wallet">Continue with Google</button><button class="wallet-secondary" id="skip-google-wallet" style="margin-top:10px">Skip for now</button>`);
+  showModal("Save and sync your wallet?",`<p class="wallet-muted">Connect Google to link your UNITED identity. Cloud wallet sync is not enabled yet, so your wallet stays on this device. Your recovery phrase and private keys are never uploaded. This is optional.</p><button class="wallet-primary" id="connect-google-wallet">Continue with Google</button><button class="wallet-secondary" id="skip-google-wallet" style="margin-top:10px">Skip for now</button>`);
   $("connect-google-wallet").onclick=()=>{
     const connected=()=>{window.removeEventListener("united-google-connected",connected);protectWalletFlow();};
     window.addEventListener("united-google-connected",connected);
