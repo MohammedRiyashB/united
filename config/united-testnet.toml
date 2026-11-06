@@ -1,0 +1,46 @@
+# UNITED public testnet candidate configuration.
+# Testnet coins are for testing only and must have no promised monetary value.
+# DNS seeds/bootstrap peers are deliberately empty until independent operators
+# provision and confirm reachable nodes.
+[network]
+chain = "unitedtestnet"
+name = "UNITED Public Testnet"
+message_start = "fab1d002"
+p2p_port = 29446
+rpc_port = 29447
+address_hrp = "tunit"
+base58_pubkey_prefix = 75
+base58_script_prefix = 76
+base58_secret_prefix = 203
+base58_xpub_prefix = "04554e54"
+base58_xprv_prefix = "04554e55"
+dns_seeds = []
+fixed_seeds = []
+
+[consensus]
+algorithm = "SHA-256d"
+initial_subsidy = 50
+halving_interval_blocks = 210000
+coinbase_maturity_blocks = 100
+target_spacing_seconds = 600
+target_timespan_seconds = 1209600
+retarget_interval_blocks = 2016
+pow_limit = "000fffff00000000000000000000000000000000000000000000000000000000"
+genesis_bits = "1f0fffff"
+allow_min_difficulty_blocks = true
+enforce_bip94 = true
+no_retargeting = false
+
+[genesis]
+timestamp_text = "UNITED PUBLIC TESTNET GENESIS 2026-11-06"
+time = 1700000001
+nonce = 60
+bits = "1f0fffff"
+merkle_root = "d913e5cf8a09ccf5d4382c4a1e78d8e8b62c9bc0538240c05b26e2baa1d35446"
+block_hash = "00057ebf90a85fff3a45bd543a266d8ed59bc76ee3aadab4fc216416582686d0"
+coinbase_output = "OP_RETURN UNITED PUBLIC TESTNET"
+
+[bootstrap]
+status = "NOT_DEPLOYED"
+# Add real, independently operated peers after they are deployed:
+# addnode = ["node1.example.org:29446", "node2.example.org:29446"]
