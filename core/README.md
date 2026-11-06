@@ -17,7 +17,7 @@ The native C++ patches add two separate chain types:
 
 Both inherit Bitcoin Core's native SHA-256d, block validation, UTXO, P2P, wallet and RPC machinery. The public-testnet genesis can be independently reproduced by the Python standard-library verifier.
 
-**Important:** this is a private development network. It deliberately uses an easy PoW target, allows minimum difficulty and disables retargeting for rapid local testing. These settings are not proposed mainnet settings.
+**Network separation:** the private `unitedregtest` profile deliberately uses an easy PoW target, allows minimum difficulty and disables retargeting for rapid local testing. The separate `unitedtestnet` candidate has a harder target and retains periodic retargeting. Neither parameter set is a mainnet configuration.
 
 ## Build process
 
