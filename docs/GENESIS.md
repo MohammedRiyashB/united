@@ -1,6 +1,6 @@
 # UNITED Genesis Block Procedure
 
-A private development genesis is embedded in the native `unitedregtest` patch. **No public-testnet or mainnet genesis has been generated or approved.**
+A private development genesis is embedded in the native `unitedregtest` patch. A candidate public-testnet genesis and independent verifier are now present in the public-testnet branch, but **no public-testnet genesis has been independently approved or frozen for release, and no mainnet genesis exists.**
 
 ## Private regtest genesis (development only)
 
