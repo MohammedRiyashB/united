@@ -261,8 +261,8 @@ jobs:
 
           "$cli" "${rpc1[@]}" createwallet "united-testnet-miner"
           "$cli" "${rpc2[@]}" createwallet "united-testnet-recipient"
-          address1="$("$cli" "${wallet1[@]}" getnewaddress "" "legacy")"
-          address2="$("$cli" "${wallet2[@]}" getnewaddress "" "legacy")"
+          address1="$("$cli" "${wallet1[@]}" getnewaddress "" "bech32")"
+          address2="$("$cli" "${wallet2[@]}" getnewaddress "" "bech32")"
           test -n "$address1"
           test -n "$address2"
 
@@ -277,8 +277,8 @@ jobs:
           test "$peer_count" -ge 1
 
           # Use getblocktemplate + submitblock, not regtest-only generatetoaddress.
-          # Legacy wallet addresses keep the CI transactions non-witness so this
-          # intentionally small test miner needs no witness commitment builder.
+          # Native SegWit payout addresses ensure the wallet spend has witness data.
+          # The miner must construct txid/wtxid Merkle trees and the BIP141 commitment.
           python3 scripts/testnet-cpu-miner.py \
             --cli "$cli" --datadir "$node1" --rpcport 29447 \
             --rpcuser "$rpc_user" --rpcpassword "$rpc_pass" \
