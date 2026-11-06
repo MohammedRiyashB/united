@@ -89,9 +89,14 @@ async function createFlow(){
   showModal("Secure your wallet",`<p class="wallet-muted">Create a strong vault password. It encrypts your wallet locally and is not your UNITED account password.</p><form id="create-vault-form"><label>Vault password (10+ characters)</label><input id="new-vault-password" type="password" minlength="10" required autocomplete="new-password"><label>Confirm password</label><input id="confirm-vault-password" type="password" minlength="10" required><button class="wallet-primary">Generate recovery phrase →</button></form>`);
   $("create-vault-form").onsubmit=async e=>{e.preventDefault();const p=$("new-vault-password").value;if(p!==$("confirm-vault-password").value){setNotice("Passwords do not match.","error");return;}const w=Wallet.createRandom();const phrase=w.mnemonic.phrase;const derived=Wallet.fromPhrase(phrase);wallets=[{id:crypto.randomUUID(),name:"My UNITED Wallet",address:derived.address,phrase,createdAt:Date.now()}];activeWalletId=wallets[0].id;unlockedPassword=p;activeWallet=wallets[0];await saveVault(p);phraseFlow(phrase);};
 }
+function accountSyncFlow(){
+  showModal("Save and sync your wallet?",`<p class="wallet-muted">Connect a Google account to associate this wallet with your UNITED account. This is optional. Your recovery phrase and private keys stay encrypted locally and are never uploaded.</p><button class="wallet-primary" id="connect-google-wallet">Continue with Google</button><button class="wallet-secondary" id="skip-google-wallet" style="margin-top:10px">Skip for now</button>`);
+  $("connect-google-wallet").onclick=()=>window.dispatchEvent(new Event("united-google-connect"));
+  $("skip-google-wallet").onclick=()=>protectWalletFlow();
+}
 function protectWalletFlow(){
   const raw=localStorage.getItem(KEY);
-  showModal("Protect your wallet",`<p class="wallet-muted">Your wallet is ready. Download an encrypted backup so you can restore it if you change or lose this device. The backup is protected by your vault password.</p><button class="wallet-primary" id="download-wallet-backup">Download encrypted backup</button><button class="wallet-secondary" id="skip-wallet-backup" style="margin-top:10px">Skip for now</button><p class="wallet-footnote">You can manage Google account connection and backup options later in Settings. Never share your recovery phrase.</p>`);
+  showModal("Download your wallet backup",`<p class="wallet-muted">Download an encrypted backup so you can restore this wallet if you change or lose this device. The backup file is protected by your vault password. You can also skip this and download it later in Settings.</p><button class="wallet-primary" id="download-wallet-backup">Download encrypted backup</button><button class="wallet-secondary" id="skip-wallet-backup" style="margin-top:10px">Skip for now</button><p class="wallet-footnote">You can manage Google account connection and backup options later in Settings. Never share your recovery phrase.</p>`);
   $("download-wallet-backup").onclick=()=>{
     const blob=new Blob([JSON.stringify({format:"UNITED encrypted wallet backup",version:1,backup:JSON.parse(raw||"null")},null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="united-wallet-backup.json";a.click();URL.revokeObjectURL(url);
@@ -103,7 +108,7 @@ function phraseFlow(phrase){
   const words=phrase.split(" ");
   showModal("Back up your recovery phrase",`<div class="wallet-warning">Anyone with this phrase can control your wallet. Never share it. UNITED will never ask you to send it to support.</div><div class="phrase-grid">${words.map((w,i)=>`<div><small>${i+1}</small><b>${esc(w)}</b></div>`).join("")}</div><label class="wallet-check"><input type="checkbox" id="phrase-confirm"> I have written down my recovery phrase and stored it safely.</label><button class="wallet-primary" id="phrase-done" disabled>I've saved my phrase →</button>`);
   $("phrase-confirm").onchange=e=>$("phrase-done").disabled=!e.target.checked;
-  $("phrase-done").onclick=()=>{protectWalletFlow();};
+  $("phrase-done").onclick=()=>{accountSyncFlow();};
 }
 async function importFlow(){
   showModal("Import UNITED wallet",`<p class="wallet-muted">Restore an existing EVM-compatible UNITED wallet with its 12- or 24-word recovery phrase. The phrase is processed locally and encrypted before storage.</p><form id="import-form"><label>Recovery phrase</label><textarea id="import-phrase" rows="4" placeholder="Enter your recovery phrase" required></textarea><label>Wallet name</label><input id="import-name" value="Imported UNITED Wallet" required><label>Vault password (10+ characters)</label><input id="import-password" type="password" minlength="10" required><button class="wallet-primary">Import wallet →</button></form>`);
