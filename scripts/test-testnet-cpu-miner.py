@@ -64,7 +64,7 @@ class TestCoinbaseSerialization(unittest.TestCase):
         self.assertTrue(stripped.startswith(bytes.fromhex("02000000")))
         self.assertTrue(full.startswith(bytes.fromhex("020000000001")))
         self.assertNotEqual(MINER.sha256d(stripped), MINER.sha256d(full))
-        self.assertEqual(full[-34:-32], b"\x01\x20")
+        self.assertEqual(full[-38:-36], b"\x01\x20")
         self.assertEqual(full[-32:], bytes(32))
 
     def test_rejects_bad_witness_commitment_script(self) -> None:
