@@ -26,18 +26,7 @@ From a checkout of this branch:
 
 ```bash
 bash scripts/verify-public-testnet-genesis.py
-bash scripts/bootstrap-bitcoin-core.sh .work/bitcoin-core-v32.1
-cd .work/bitcoin-core-v32.1
-git apply --check ../../core/patches/0001-add-united-regtest.patch
-git apply ../../core/patches/0001-add-united-regtest.patch
-git apply --check ../../core/patches/0002-add-united-public-testnet.patch
-git apply ../../core/patches/0002-add-united-public-testnet.patch
-cmake -S . -B build -G Ninja \
-  -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DBUILD_GUI=OFF \
-  -DBUILD_TX=OFF -DBUILD_UTIL=OFF -DENABLE_WALLET=ON \
-  -DENABLE_IPC=OFF -DENABLE_EXTERNAL_SIGNER=OFF \
-  -DWITH_ZMQ=OFF -DWITH_USDT=OFF
-cmake --build build --parallel 2
+bash scripts/build-united-node.sh
 ```
 
 The bootstrap script verifies the pinned v32.1 source and requires the signing key to be independently trusted in the local GPG keyring. Do not bypass a failed signature check.
