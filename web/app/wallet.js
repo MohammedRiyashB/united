@@ -13,7 +13,7 @@ const short = (s) => s ? s.slice(0, 8) + "…" + s.slice(-6) : "";
 const secretOf = (w) => w.secret || w.phrase || "";
 
 function logoMark(size=70) {
-  return `<svg class="united-mark" width="${size}" height="${size}" viewBox="0 0 100 100" role="img" aria-label="UNITED logo">
+  return `<svg class="united-mark" width="${size}" height="${size}" viewBox="0 0 100 100" role="img" aria-label="UNITE logo">
     <defs><linearGradient id="unitedLogoGradient" x1="12%" y1="0%" x2="92%" y2="100%"><stop offset="0" stop-color="#45efff"/><stop offset=".48" stop-color="#087eff"/><stop offset="1" stop-color="#704dff"/></linearGradient></defs>
     <path d="M19 17h18v40c0 12 5 18 13 18s13-6 13-18V17h18v42c0 23-12 37-31 37S19 82 19 59V17Z" fill="url(#unitedLogoGradient)"/>
     <path d="M19 17 37 17 37 40 19 58Z" fill="#18d8fa" opacity=".94"/>
@@ -35,7 +35,7 @@ function globeArt() {
 }
 
 function walletArt() {
-  return `<svg class="wallet-art" viewBox="0 0 360 250" role="img" aria-label="Glowing UNITED wallet illustration">
+  return `<svg class="wallet-art" viewBox="0 0 360 250" role="img" aria-label="Glowing Unite wallet illustration">
     <defs><linearGradient id="walletBody" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#32dfff"/><stop offset=".48" stop-color="#0878ff"/><stop offset="1" stop-color="#7652ff"/></linearGradient><linearGradient id="walletSide" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#123f9a"/><stop offset="1" stop-color="#07142f"/></linearGradient><filter id="walletGlow"><feGaussianBlur stdDeviation="12"/></filter></defs>
     <ellipse cx="180" cy="214" rx="135" ry="16" fill="#087bff" opacity=".65" filter="url(#walletGlow)"/>
     <ellipse cx="180" cy="211" rx="130" ry="12" fill="none" stroke="#5c83ff" stroke-width="2" opacity=".7"/>
@@ -105,7 +105,7 @@ function renderHome() {
   pageShell(`
     <header class="uw-home-header"><div class="uw-language">◎ EN⌄</div></header>
     <section class="uw-welcome">
-      <div class="uw-brand-large">${logoMark(96)}<div>UNITED</div><small>NETWORK</small></div>
+      <div class="uw-brand-large">${logoMark(96)}<div>UNITE</div><small>NETWORK</small></div>
       <div class="uw-earth-wrap">${globeArt()}</div>
       <h1>Your money.<br><span>Your control.</span></h1>
       <p class="uw-subtitle">A secure home for your digital assets.</p>
@@ -149,7 +149,7 @@ function renderCreatePassword() {
       <form class="uw-form" id="create-vault-form">
         <label for="new-vault-password">Wallet password</label><input id="new-vault-password" type="password" minlength="10" autocomplete="new-password" placeholder="At least 10 characters" required>
         <label for="confirm-vault-password">Confirm password</label><input id="confirm-vault-password" type="password" minlength="10" autocomplete="new-password" placeholder="Re-enter password" required>
-        <p class="uw-form-hint">This password encrypts the local wallet vault. UNITED cannot reset it.</p>
+        <p class="uw-form-hint">This password encrypts the local wallet vault. UNITE cannot reset it.</p>
         <button class="uw-btn uw-btn-primary" type="submit">Generate wallet <b>›</b></button>
         <p id="wallet-inline-error" class="uw-inline-error" hidden></p>
       </form>
@@ -163,7 +163,7 @@ function renderCreatePassword() {
     try{
       const generated=Wallet.createRandom();
       const phrase=generated.mnemonic.phrase;
-      const created={id:crypto.randomUUID(),name:"My UNITED Wallet",address:Wallet.fromPhrase(phrase).address,secretType:"mnemonic",secret:phrase,createdAt:Date.now()};
+      const created={id:crypto.randomUUID(),name:"My Unite Wallet",address:Wallet.fromPhrase(phrase).address,secretType:"mnemonic",secret:phrase,createdAt:Date.now()};
       wallets=[created];activeWallet=created;activeWalletId=created.id;unlockedPassword=p;
       await saveVault(p);renderPhrase(phrase);
     }catch(err){$("wallet-inline-error").textContent=err.message||"Wallet creation failed."; $("wallet-inline-error").hidden=false;}
@@ -177,7 +177,7 @@ function renderPhrase(phrase) {
       <header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">BACKUP YOUR WALLET · 1/2</span></header>
       <h1>Secret recovery phrase</h1>
       <p class="uw-subtitle">Write these words down in the correct order and store them somewhere private. Anyone with this phrase can access your wallet.</p>
-      <div class="uw-warning"><b>Never share your recovery phrase.</b><span>UNITED support will never ask you to reveal it.</span></div>
+      <div class="uw-warning"><b>Never share your recovery phrase.</b><span>UNITE support will never ask you to reveal it.</span></div>
       <div class="uw-phrase-grid">${words.map((word,i)=>`<div><small>${i+1}</small><b>${esc(word)}</b></div>`).join("")}</div>
       <label class="uw-check"><input type="checkbox" id="phrase-confirm"><span>I have saved my recovery phrase in a safe place.</span></label>
       <button class="uw-btn uw-btn-primary" id="phrase-done" disabled>Continue <b>›</b></button>
@@ -199,7 +199,7 @@ function renderImport() {
       <form class="uw-form" id="import-form">
         <label id="import-secret-label" for="import-secret">Recovery phrase</label>
         <textarea id="import-secret" rows="4" placeholder="Enter your recovery phrase (12 or 24 words)" required></textarea>
-        <label for="import-name">Wallet name</label><input id="import-name" value="Imported UNITED Wallet" required>
+        <label for="import-name">Wallet name</label><input id="import-name" value="Imported Unite Wallet" required>
         <label for="import-password">Wallet password (10+ characters)</label><input id="import-password" type="password" minlength="10" autocomplete="new-password" placeholder="Create local vault password" required>
         <button class="uw-btn uw-btn-primary" type="submit">Import wallet <b>›</b></button>
         <p id="wallet-inline-error" class="uw-inline-error" hidden></p>
@@ -226,7 +226,7 @@ function renderImport() {
         imported=new Wallet(secret);normalizedSecret=secret;
       }
       const p=$("import-password").value;
-      const entry={id:crypto.randomUUID(),name:$("import-name").value.trim()||"Imported UNITED Wallet",address:imported.address,secretType:importKind==="phrase"?"mnemonic":"privateKey",secret:normalizedSecret,createdAt:Date.now()};
+      const entry={id:crypto.randomUUID(),name:$("import-name").value.trim()||"Imported Unite Wallet",address:imported.address,secretType:importKind==="phrase"?"mnemonic":"privateKey",secret:normalizedSecret,createdAt:Date.now()};
       if(wallets.length && unlockedPassword!==p)throw new Error("Unlock your existing wallet first to add another wallet.");
       wallets.push(entry);activeWallet=entry;activeWalletId=entry.id;unlockedPassword=p;
       await saveVault(p);renderGoogleOffer();
@@ -261,7 +261,7 @@ function renderBackupOffer() {
       <header class="uw-flow-header">${backButton("home")}<span class="uw-step-label">BACKUP YOUR WALLET · 2/2</span></header>
       <h1>Keep a backup</h1>
       <p class="uw-subtitle">Download an encrypted copy of your local wallet vault. You'll need your wallet password to restore it.</p>
-      <div class="uw-backup-card"><div class="uw-backup-icon">⇩</div><b>Encrypted UNITED wallet backup</b><span>Private keys are encrypted before the file is created.</span></div>
+      <div class="uw-backup-card"><div class="uw-backup-icon">⇩</div><b>Encrypted Unite wallet backup</b><span>Private keys are encrypted before the file is created.</span></div>
       <button class="uw-btn uw-btn-primary" id="download-wallet-backup">Download backup <b>↓</b></button>
       <button class="uw-skip-button" id="skip-wallet-backup">Skip for now</button>
       <p id="backup-status" class="uw-form-hint" aria-live="polite"></p>
@@ -271,7 +271,7 @@ function renderBackupOffer() {
   $("download-wallet-backup").onclick=()=>{
     try{
       const raw=localStorage.getItem(KEY);
-      const blob=new Blob([JSON.stringify({format:"UNITED encrypted wallet backup",version:1,backup:JSON.parse(raw||"null")},null,2)],{type:"application/json"});
+      const blob=new Blob([JSON.stringify({format:"UNITE encrypted wallet backup",version:1,backup:JSON.parse(raw||"null")},null,2)],{type:"application/json"});
       const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="united-wallet-backup.json";a.click();URL.revokeObjectURL(url);
       $("backup-status").textContent="Encrypted backup downloaded. Keep it private.";
     }catch(err){$("backup-status").textContent="Backup download failed: "+err.message;}
@@ -285,10 +285,10 @@ function renderDashboard() {
   pageShell(`
     <div class="uw-dashboard">
       <header class="uw-dashboard-header">
-        <div class="uw-dashboard-brand">${logoMark(34)}<b>UNITED</b></div>
+        <div class="uw-dashboard-brand">${logoMark(34)}<b>UNITE</b></div>
         <div class="uw-header-actions"><button aria-label="Scan" title="Scan" data-coming="Scanner">⌗</button><button aria-label="Notifications" title="Notifications" data-coming="Notifications">♧</button></div>
       </header>
-      <div class="uw-network-select"><span class="uw-live-dot"></span> UNITED NETWORK <span>⌄</span></div>
+      <div class="uw-network-select"><span class="uw-live-dot"></span> UNITE WALLET <span>⌄</span></div>
       <section class="uw-total-card"><div class="uw-total-heading">Total Balance <span>◉</span></div><div class="uw-total-value">— <small>UNIT</small></div><div class="uw-total-foot">Live balance unavailable · Testnet</div><div class="uw-total-logo">${logoMark(115)}</div></section>
       <div class="uw-action-grid">
         <button id="send-action"><span>↗</span>Send</button>
@@ -297,17 +297,17 @@ function renderDashboard() {
         <button id="buy-action"><span>▣</span>Buy</button>
       </div>
       <section class="uw-assets-section"><div class="uw-section-heading"><b>My Assets</b><button id="assets-view">View all ›</button></div>
-        <div class="uw-asset-row"><div class="uw-asset-icon">${logoMark(34)}</div><div class="uw-asset-copy"><b>UNITED (UNIT)</b><small>United Network native asset</small></div><div class="uw-asset-amount"><b>— UNIT</b><small>Balance unavailable</small></div></div>
+        <div class="uw-asset-row"><div class="uw-asset-icon">${logoMark(34)}</div><div class="uw-asset-copy"><b>UNITE (UNIT)</b><small>United Network native asset</small></div><div class="uw-asset-amount"><b>— UNIT</b><small>Balance unavailable</small></div></div>
       </section>
-      <section class="uw-activity-section"><div class="uw-section-heading"><b>Recent Activity</b><button id="activity-view">View all ›</button></div><div class="uw-activity-empty"><span>↘</span><b>No transactions yet</b><small>Your UNITED network activity will appear here.</small></div></section>
+      <section class="uw-activity-section"><div class="uw-section-heading"><b>Recent Activity</b><button id="activity-view">View all ›</button></div><div class="uw-activity-empty"><span>↘</span><b>No transactions yet</b><small>Your UNITE network activity will appear here.</small></div></section>
       <div class="uw-address-strip"><span>${esc(short(w.address))}</span><button id="copy-address">Copy address</button></div>
       <nav class="uw-bottom-nav"><button class="active" data-nav="dashboard"><span>⌂</span>Home</button><button data-nav="activity"><span>◷</span>Activity</button><button data-nav="explore"><span>◈</span>Explore</button><button data-nav="settings"><span>⚙</span>Settings</button></nav>
       <div id="wallet-notice" class="uw-notice" hidden></div>
     </div>
   `);
-  $("send-action").onclick=()=>showInfo("Send UNIT","Sending is disabled until the UNITED RPC endpoint, chain ID, fee estimation and transaction broadcaster are connected and verified. No fake transactions will be shown.");
+  $("send-action").onclick=()=>showInfo("Send UNIT","Sending is disabled until the UNITE RPC endpoint, chain ID, fee estimation and transaction broadcaster are connected and verified. No fake transactions will be shown.");
   $("receive-action").onclick=renderReceive;
-  $("swap-action").onclick=()=>showInfo("Swap","Swap will be available when a verified UNITED exchange route is connected.");
+  $("swap-action").onclick=()=>showInfo("Swap","Swap will be available when a verified UNITE exchange route is connected.");
   $("buy-action").onclick=()=>showInfo("Buy UNIT","Buy is not available on this testnet yet.");
   $("assets-view").onclick=()=>showInfo("Your assets","UNIT is the native asset currently configured in this wallet interface.");
   $("activity-view").onclick=()=>navigate("activity");
@@ -321,8 +321,8 @@ function renderReceive() {
   pageShell(`
     <div class="uw-flow-page">
       <header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">RECEIVE ASSET</span></header>
-      <h1>Receive UNIT</h1><p class="uw-subtitle">Share this public address to receive native UNIT on the UNITED network.</p>
-      <div class="uw-receive-card"><div class="uw-receive-icon">${logoMark(58)}</div><b>UNITED wallet address</b><code>${esc(w.address)}</code><button class="uw-btn uw-btn-primary" id="copy-receive-address">Copy address</button></div>
+      <h1>Receive UNIT</h1><p class="uw-subtitle">Share this public address to receive native UNIT on the UNITE network.</p>
+      <div class="uw-receive-card"><div class="uw-receive-icon">${logoMark(58)}</div><b>Unite wallet address</b><code>${esc(w.address)}</code><button class="uw-btn uw-btn-primary" id="copy-receive-address">Copy address</button></div>
       <p class="uw-form-hint">Only share your public address. Never share your private key or recovery phrase.</p>
     </div>`);
   bindBack("dashboard");
@@ -330,11 +330,11 @@ function renderReceive() {
 }
 
 function renderActivity() {
-  pageShell(`<div class="uw-flow-page"><header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">ON-CHAIN HISTORY</span></header><h1>Activity</h1><p class="uw-subtitle">Your UNITED transaction history.</p><div class="uw-activity-empty uw-activity-large"><span>↘</span><b>No transactions yet</b><small>Activity will appear after the network RPC is connected.</small></div></div>`);
+  pageShell(`<div class="uw-flow-page"><header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">ON-CHAIN HISTORY</span></header><h1>Activity</h1><p class="uw-subtitle">Your UNITE transaction history.</p><div class="uw-activity-empty uw-activity-large"><span>↘</span><b>No transactions yet</b><small>Activity will appear after the network RPC is connected.</small></div></div>`);
   bindBack("dashboard");
 }
 function renderExplore() {
-  pageShell(`<div class="uw-flow-page"><header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">UNITED NETWORK</span></header><h1>Explore</h1><p class="uw-subtitle">Discover the UNITED public testnet.</p><div class="uw-explore-card"><div class="uw-explore-mark">${logoMark(60)}</div><b>UNITED Network</b><span>Native asset · UNIT</span><p>Experimental testnet. No real-value assets. Network tools will appear here as they become available.</p></div></div>`);
+  pageShell(`<div class="uw-flow-page"><header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">UNITE WALLET</span></header><h1>Explore</h1><p class="uw-subtitle">Discover the UNITE public testnet.</p><div class="uw-explore-card"><div class="uw-explore-mark">${logoMark(60)}</div><b>Unite Network</b><span>Native asset · UNIT</span><p>Experimental testnet. No real-value assets. Network tools will appear here as they become available.</p></div></div>`);
   bindBack("dashboard");
 }
 function renderSettings() {
@@ -344,7 +344,7 @@ function renderSettings() {
       <h1>Settings</h1><p class="uw-subtitle">Manage your wallet and account preferences.</p>
       <div class="uw-settings-list">
         <div class="uw-setting"><div><b>Google account</b><small>Optional account link. Wallet keys stay on this device.</small></div><button id="google-connect">Connect</button></div>
-        <div class="uw-setting"><div><b>Wallet name</b><small>${esc(activeWallet?.name||"UNITED Wallet")}</small></div><button id="rename-wallet">Edit</button></div>
+        <div class="uw-setting"><div><b>Wallet name</b><small>${esc(activeWallet?.name||"Unite Wallet")}</small></div><button id="rename-wallet">Edit</button></div>
         <div class="uw-setting"><div><b>Recovery backup</b><small>Review your recovery phrase securely.</small></div><button id="backup-action">View</button></div>
         <div class="uw-setting"><div><b>Encrypted backup</b><small>Download a copy of this device vault.</small></div><button id="export-wallet">Download</button></div>
         <div class="uw-setting"><div><b>Lock wallet</b><small>Lock this wallet on this device.</small></div><button id="lock-wallet">Lock</button></div>
@@ -378,7 +378,7 @@ function backupFlow() {
 function downloadBackup() {
   try{
     const raw=localStorage.getItem(KEY);
-    const blob=new Blob([JSON.stringify({format:"UNITED encrypted wallet backup",version:1,backup:JSON.parse(raw||"null")},null,2)],{type:"application/json"});
+    const blob=new Blob([JSON.stringify({format:"UNITE encrypted wallet backup",version:1,backup:JSON.parse(raw||"null")},null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="united-wallet-backup.json";a.click();URL.revokeObjectURL(url);
   }catch(err){showInfo("Backup failed",err.message);}
 }
