@@ -133,13 +133,18 @@ class BitcoinCLI:
         self.args = args
         if bool(args.rpcuser) != bool(args.rpcpassword):
             raise ValueError("provide both --rpcuser and --rpcpassword, or neither to use the local RPC cookie")
-        self.base = [
-            args.cli,
+        self.base = [args.cli]
+        # Installed nodes keep their generated RPC credentials in this file.
+        # Passing it explicitly makes bitcoin-cli use the same credentials as bitcoind.
+        config_file = getattr(args, "conf", None)
+        if config_file:
+            self.base.append(f"-conf={config_file}")
+        self.base.extend([
             "-chain=unitedtestnet",
             f"-datadir={args.datadir}",
             f"-rpcport={args.rpcport}",
-        ]
-        # When credentials are omitted, bitcoin-cli uses the node's cookie file.
+        ])
+        # When no config or explicit credentials are supplied, bitcoin-cli uses the node's cookie file.
         # Run the miner as the same OS user as bitcoind so the cookie stays private.
         if args.rpcuser:
             self.base.extend([f"-rpcuser={args.rpcuser}", f"-rpcpassword={args.rpcpassword}"])
@@ -245,6 +250,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cli", required=True)
     parser.add_argument("--datadir", required=True)
+    parser.add_argument("--conf", help="optional node configuration file (needed when RPC credentials are stored there)")
     parser.add_argument("--rpcport", required=True, type=int)
     parser.add_argument("--rpcuser", help="optional; omit both RPC flags to use the local cookie file")
     parser.add_argument("--rpcpassword", help="optional; must be supplied together with --rpcuser")
