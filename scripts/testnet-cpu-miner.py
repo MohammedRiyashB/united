@@ -112,8 +112,8 @@ def coinbase_transaction(
 
     # SegWit coinbase witness: one 32-byte reserved value. The witness
     # commitment output is copied from getblocktemplate and checked below.
-    witness = b"\\x01\\x20" + bytes(32)
-    full = struct.pack("<i", 2) + b"\x00\\x01" + vin + outputs + witness + locktime
+    witness = b"\x01\x20" + bytes(32)
+    full = struct.pack("<i", 2) + b"\x00\x01" + vin + outputs + witness + locktime
     return stripped, full
 
 def merkle_root(transactions: list[bytes]) -> bytes:
