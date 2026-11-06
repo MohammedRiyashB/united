@@ -35,5 +35,9 @@ jobs:
           node-version: 22
       - name: Validate browser P2P module syntax
         run: node --check web/p2p/peer.js
+      - name: Validate UNITED wallet application module syntax
+        run: |
+          node --check --input-type=module < web/app/app.js
+          node --check --input-type=module < web/app/wallet.js
       - name: Test public-testnet CPU miner serialization
         run: python3 scripts/test-testnet-cpu-miner.py
