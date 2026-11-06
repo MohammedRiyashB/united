@@ -1,6 +1,6 @@
 # UNITED Genesis Block Procedure
 
-A private development genesis is embedded in the native `unitedregtest` patch. **No public-testnet or mainnet genesis has been generated or approved.**
+A private development genesis is embedded in the native `unitedregtest` patch. A deterministic public-testnet candidate genesis has also been generated and embedded in the candidate native patch, but it has **not** been frozen or independently approved. No mainnet genesis has been generated.
 
 ## Private regtest genesis (development only)
 
@@ -17,7 +17,7 @@ The genesis timestamp is deliberately historical so that it cannot be ahead of a
 
 ## Public testnet candidate genesis (not yet released)
 
-The current `network/united-public-testnet` branch contains these candidate constants:
+The current `main` branch contains these candidate constants in `config/united-testnet.toml`, `core/patches/0002-add-united-public-testnet.patch`, and `scripts/verify-public-testnet-genesis.py`:
 
 - Timestamp text: `UNITED PUBLIC TESTNET GENESIS 2026-11-06`
 - Timestamp: `1793937600` (2026-11-06 04:00:00 UTC)
@@ -29,7 +29,7 @@ The current `network/united-public-testnet` branch contains these candidate cons
 
 The independent script `scripts/verify-public-testnet-genesis.py` serializes the coinbase transaction and 80-byte header, recomputes the Merkle root and SHA-256d hash, and checks proof of work against the target. The native node also asserts the same Merkle root and block hash.
 
-These are **candidate public-testnet constants** until the native patch and two-node CI pass and independent reviewers approve the network parameters. The testnet has no commissioned DNS seeds or public bootstrap peers yet, so this does not mean a live network exists.
+These are **candidate public-testnet constants**, not launch-approved parameters. Earlier native CI runs passed on candidate revisions, but the exact current `main` commit still requires a fresh native workflow run and independent reviewers must approve the network parameters. The testnet has no commissioned DNS seeds or public bootstrap peers yet, so this does not mean a live network exists.
 
 ## Public-testnet and mainnet genesis requirements
 

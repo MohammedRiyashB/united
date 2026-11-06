@@ -1,6 +1,6 @@
 # UNITED Public Testnet Go/No-Go Checklist
 
-**Current decision: NO-GO for public announcement.** The native public-testnet chain, two-node GBT mining/transfer and P2P integration passed CI on an earlier candidate revision. The current revision adds an installable node bundle and a witness-transaction-capable solo CPU miner; its fresh native CI is running. No public peer operators have been deployed. This checklist defines the evidence required before announcing a live public UNITED testnet.
+**Current decision: NO-GO for public announcement.** Earlier candidate revisions passed native two-node build, GBT mining/transfer and P2P smoke tests. The current `main` commit (`dffee3918a46ccff61f2e115fd620d165baec628` at this audit) has not yet received a native workflow run: the native workflow did not trigger on pushes to `main`. The audit adds that trigger. No public peer operators have been deployed. This checklist defines the evidence required before announcing a live public UNITED testnet.
 
 Testnet coins must be clearly labelled as valueless. Do not accept deposits, sell testnet coins, promise returns, or reuse any mainnet keys, addresses, data directories or credentials.
 
@@ -60,11 +60,11 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 - [x] Candidate genesis time is set to 2026-11-06 04:00 UTC to allow bootstrap miners to request templates during the initial release window. If launch slips beyond 24 hours from that timestamp, re-check initial-block-download behavior before freezing genesis.
 - [x] Native private `unitedregtest` chain patch exists.
 - [x] Private-regtest two-node mining, wallet, transaction and P2P CI passed (run `42157048924`).
-- [x] Public-testnet candidate chain type, identity, genesis and address encodings are implemented in branch `network/united-public-testnet`.
+- [x] Public-testnet candidate chain type, identity, genesis and address encodings are present in `main` at the audited revision.
 - [x] Independent Python genesis verifier has been added.
 - [x] Public-testnet patch applied and CMake configuration succeeded in the latest native runs.
 - [x] Earlier native candidate run 42164550405 compiled and passed the two-node public-testnet mining/transaction/P2P smoke test.
-- [x] Latest witness-commitment-aware miner build and end-to-end CI pass (run 42165119964).
+- [x] Witness-commitment-aware miner build and end-to-end CI passed on an earlier candidate revision (run 42165119964); this does not validate the audited `main` SHA.
 - [ ] Public network magic, ports, HRP and address prefixes are checked for collisions by independent reviewers.
 - [ ] Multiple public seed/bootstrap hosts are deployed and reachable from external networks.
 - [ ] An independently operated miner or pool is deployed and can produce valid blocks; CI's Python miner is only a test harness.

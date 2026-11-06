@@ -2,9 +2,8 @@
 
 **Base upstream:** Bitcoin Core `v32.1`  
 **Pinned commit:** `f0de87f040621468b956f01f526a43a010310501`  
-**Current public-testnet branch:** `network/united-public-testnet`  
-**Status:** private-regtest and strengthened public-testnet two-node end-to-end CI both passed, including native compile, genesis identity, wallet creation, GBT/submitblock mining, P2P sync and a confirmed wallet transfer. The public network is not externally live because no bootstrap peers/miners have been deployed.
-
+**Audited repository revision:** `main` at `dffee3918a46ccff61f2e115fd620d165baec628`  
+**Status:** the repository contains both native chain patches and candidate network configuration. Earlier candidate revisions passed private-regtest and public-testnet two-node smoke tests. The audited `main` SHA has **not** yet been validated by the native workflow because that workflow did not run on pushes to `main`; an audit branch adds a push trigger. The public network is not externally live: there are no independently operated public bootstrap peers or miners.
 ## 1. Private UNITED regtest — verified
 
 GitHub Actions run [42157048924](https://github.com/MohammedRiyashB/united/actions/runs/42157048924) passed the native build and all private two-node tests:
@@ -50,7 +49,7 @@ GitHub Actions run [42164550405](https://github.com/MohammedRiyashB/united/actio
 - a 1 UNITED wallet transaction was sent;
 - the miner produced block 102 and the second wallet's balance assertion passed.
 
-The strengthened CI miner constructs the BIP141 coinbase witness reserved value and validates the template witness commitment. It deliberately rejects witness-bearing mempool transactions; CI uses legacy wallet transactions. This is a test harness, not a production miner.
+The strengthened CI miner constructs the BIP141 coinbase witness reserved value and validates the template witness commitment. It uses the template's txid and wtxid values separately and includes the serialized template transactions in the submitted block. The offline tests cover coinbase witness serialization and commitment consistency. This is a test harness, not a production miner.
 
 ## 4. Latest strengthened validation
 

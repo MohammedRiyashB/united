@@ -65,13 +65,14 @@ Replace the example address below with your own payout address:
 sudo -u united python3 /usr/local/libexec/united/testnet-cpu-miner.py \\
   --cli /usr/local/bin/bitcoin-cli \\
   --datadir /var/lib/unitedtestnet \\
+  --conf /etc/united/unitedtestnet.conf \\
   --rpcport 29447 \\
   --address "tunit1_REPLACE_WITH_YOUR_ADDRESS" \\
   --wallet united-testnet-miner \\
   --blocks 1
 \`\`\`
 
-The miner uses the local RPC cookie automatically. Do not add \`--rpcuser\` or \`--rpcpassword\` unless you deliberately use non-cookie RPC authentication.
+The miner reads the generated RPC username and password from the node configuration file supplied with `--conf`. Keep that file readable only by the node service account and trusted administrators. Do not expose its credentials. Do not add \`--rpcuser\` or \`--rpcpassword\` unless you deliberately use non-cookie RPC authentication.
 
 After it reports a mined block, verify propagation from the second independent node:
 

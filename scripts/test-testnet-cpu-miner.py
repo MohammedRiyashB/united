@@ -109,12 +109,27 @@ class TestRPCAuthentication(unittest.TestCase):
             cli="bitcoin-cli",
             datadir="/tmp/united-testnet",
             rpcport=29447,
+            conf=None,
             rpcuser=None,
             rpcpassword=None,
         )
         base = MINER.BitcoinCLI(args).base
         self.assertNotIn("-rpcuser=", base)
         self.assertNotIn("-rpcpassword=", base)
+
+    def test_passes_node_config_file_to_bitcoin_cli(self) -> None:
+        from types import SimpleNamespace
+
+        args = SimpleNamespace(
+            cli="bitcoin-cli",
+            datadir="/var/lib/unitedtestnet",
+            conf="/etc/united/unitedtestnet.conf",
+            rpcport=29447,
+            rpcuser=None,
+            rpcpassword=None,
+        )
+        base = MINER.BitcoinCLI(args).base
+        self.assertIn("-conf=/etc/united/unitedtestnet.conf", base)
 
     def test_requires_rpc_username_and_password_together(self) -> None:
         from types import SimpleNamespace

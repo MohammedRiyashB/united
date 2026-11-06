@@ -1,6 +1,6 @@
 # UNITED Public Testnet — Candidate Operator Guide
 
-**Status: locally validated candidate, not a live public network.** The native chain type, genesis, two-node mining, wallet transaction and P2P synchronization have passed native CI on the candidate branch. The current bundle/miner updates are being revalidated. No external bootstrap peers have been deployed or verified. Testnet coins have no value.
+**Status: native testnet candidate, not a live public network.** Earlier candidate revisions passed local two-node native build/mining/wallet/P2P tests. The exact current `main` commit has not yet received a fresh native CI run. No external bootstrap peers have been deployed or verified. Testnet coins have no value.
 
 ## Candidate network identity
 
@@ -13,7 +13,6 @@
 | Base58 pubkey / script / WIF | `75 / 76 / 203` |
 | Genesis hash | `0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1` |
 | Genesis time / nonce | `1793937600` / `3565` (2026-11-06 04:00 UTC) |
-| Genesis hash | `0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1` |
 | Genesis Merkle root | `d913e5cf8a09ccf5d4382c4a1e78d8e8b62c9bc0538240c05b26e2baa1d35446` |
 | Subsidy / halving | `50 UNITED / 210,000 blocks` |
 | Target spacing / retarget | `600 seconds / 2,016 blocks` |
