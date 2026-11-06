@@ -319,3 +319,47 @@ jobs:
       - name: Record compiled binaries
         run: |
           find upstream/build/bin -maxdepth 1 -type f -printf '%f\n' | sort
+      - name: Package verified UNITED testnet node (Ubuntu 24.04 x86_64)
+        shell: bash
+        run: |
+          set -euo pipefail
+          dist="$RUNNER_TEMP/united-testnet-dist"
+          mkdir -p "$dist/bin" "$dist/etc/united" "$dist/lib/systemd/system" "$dist/docs"
+          install -m 0755 upstream/build/bin/bitcoind "$dist/bin/bitcoind"
+          install -m 0755 upstream/build/bin/bitcoin-cli "$dist/bin/bitcoin-cli"
+          install -m 0644 infra/public-testnet/unitedtestnet.conf.example "$dist/etc/united/unitedtestnet.conf.example"
+          install -m 0644 infra/public-testnet/unitedtestnet.service "$dist/lib/systemd/system/unitedtestnet.service"
+          install -m 0755 infra/public-testnet/install-node.sh "$dist/install-node.sh"
+          install -m 0644 LICENSE "$dist/LICENSE"
+          install -m 0644 docs/PUBLIC_TESTNET.md "$dist/docs/PUBLIC_TESTNET.md"
+          cat > "$dist/BUILD-METADATA.txt" <<EOF
+          UNITED Public Testnet candidate node bundle
+          Repository: $GITHUB_REPOSITORY
+          Source commit: $GITHUB_SHA
+          Upstream: Bitcoin Core v32.1 (see core/upstream.lock.toml)
+          Platform: Ubuntu 24.04 x86_64
+          Chain: unitedtestnet
+          P2P port: 29446/tcp
+          RPC port: 29447/tcp (loopback only; do not expose)
+          Genesis: 0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1
+          Status: candidate testnet; not a signed or audited production release
+          EOF
+          (
+            cd "$dist"
+            find bin etc lib docs -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+            sha256sum install-node.sh LICENSE BUILD-METADATA.txt >> SHA256SUMS
+          )
+          archive="$RUNNER_TEMP/united-testnet-linux-x86_64-$GITHUB_SHA.tar.gz"
+          tar -C "$dist" -czf "$archive" .
+          sha256sum "$archive" > "$archive.sha256"
+          mkdir -p release
+          cp "$archive" "$archive.sha256" release/
+      - name: Upload verified node bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: united-testnet-linux-x86_64-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/united-testnet-linux-x86_64-${{ github.sha }}.tar.gz
+            ${{ runner.temp }}/united-testnet-linux-x86_64-${{ github.sha }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30
