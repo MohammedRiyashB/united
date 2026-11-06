@@ -10,7 +10,9 @@ on:
       - ".github/workflows/bitcoin-core-upstream.yml"
       - "core/upstream.lock.toml"
       - "core/patches/**"
+      - "config/**"
       - "scripts/bootstrap-bitcoin-core.sh"
+      - "scripts/verify-public-testnet-genesis.py"
   workflow_dispatch:
 
 permissions:
@@ -28,6 +30,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake ninja-build pkg-config python3 libevent-dev libboost-dev libsqlite3-dev
+      - name: Independently verify public-testnet genesis
+        run: python3 scripts/verify-public-testnet-genesis.py
       - name: Clone Bitcoin Core source
         run: |
           git clone --no-checkout https://github.com/bitcoin/bitcoin.git upstream
