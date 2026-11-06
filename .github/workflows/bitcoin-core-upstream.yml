@@ -5,6 +5,7 @@ on:
     branches:
       - consensus/bitcoin-core-32.1-migration
       - integration/bitcoin-core-32.1-native
+      - integration/united-regtest-functional-tests
     paths:
       - ".github/workflows/bitcoin-core-upstream.yml"
       - "core/upstream.lock.toml"
@@ -50,6 +51,8 @@ jobs:
           cd upstream
           git apply --check ../core/patches/0001-add-united-regtest.patch
           git apply ../core/patches/0001-add-united-regtest.patch
+          git apply --check ../core/patches/0002-add-united-public-testnet.patch
+          git apply ../core/patches/0002-add-united-public-testnet.patch
       - name: Configure minimal daemon build
         run: |
           cmake -S upstream -B upstream/build -G Ninja \
@@ -177,6 +180,72 @@ jobs:
           test "$synced" -eq 1
           received="$("$cli" "${wallet2[@]}" getbalance)"
           awk -v b="$received" 'BEGIN { exit !(b >= 1.0) }'
+          "$cli" "${rpc1[@]}" getblockchaininfo
+          "$cli" "${rpc2[@]}" getblockchaininfo
+      - name: Start two UNITED public-testnet nodes and verify network identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cli="upstream/build/bin/bitcoin-cli"
+          daemon="upstream/build/bin/bitcoind"
+          node1="$(mktemp -d)"
+          node2="$(mktemp -d)"
+          rpc_user="unitedtestci"
+          rpc_pass="ci-testnet-secret"
+          rpc1=(-chain=unitedtestnet -datadir="$node1" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29447)
+          rpc2=(-chain=unitedtestnet -datadir="$node2" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29449)
+          wallet1=("${rpc1[@]}" -rpcwallet=united-testnet-wallet)
+          wallet2=("${rpc2[@]}" -rpcwallet=united-testnet-wallet)
+          cleanup() {
+            "$cli" "${rpc2[@]}" stop >/dev/null 2>&1 || true
+            "$cli" "${rpc1[@]}" stop >/dev/null 2>&1 || true
+            rm -rf "$node1" "$node2"
+          }
+          dump_testnet_logs() {
+            find "$node1" "$node2" -name debug.log -type f -print -exec tail -n 120 {} \; || true
+          }
+          trap cleanup EXIT
+
+          "$daemon" -chain=unitedtestnet -datadir="$node1" -daemonwait=1 \
+            -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29447 \
+            -port=29446 -bind=127.0.0.1:29446 -natpmp=0 -discover=0 -listenonion=0
+          "$daemon" -chain=unitedtestnet -datadir="$node2" -daemonwait=1 \
+            -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29449 \
+            -port=29448 -bind=127.0.0.1:29448 -natpmp=0 -discover=0 -listenonion=0
+
+          wait_rpc() {
+            local -n args=$1
+            for attempt in $(seq 1 60); do
+              if "$cli" "${args[@]}" getblockchaininfo >/dev/null 2>&1; then return 0; fi
+              sleep 1
+            done
+            dump_testnet_logs
+            return 1
+          }
+          wait_rpc rpc1
+          wait_rpc rpc2
+
+          expected="00057ebf90a85fff3a45bd543a266d8ed59bc76ee3aadab4fc216416582686d0"
+          test "$("$cli" "${rpc1[@]}" getblockhash 0)" = "$expected"
+          test "$("$cli" "${rpc2[@]}" getblockhash 0)" = "$expected"
+          "$cli" "${rpc1[@]}" getblockchaininfo | grep -q '"chain": "unitedtestnet"'
+          "$cli" "${rpc2[@]}" getblockchaininfo | grep -q '"chain": "unitedtestnet"'
+
+          "$cli" "${rpc1[@]}" createwallet "united-testnet-wallet"
+          "$cli" "${rpc2[@]}" createwallet "united-testnet-wallet"
+          address1="$("$cli" "${wallet1[@]}" getnewaddress)"
+          address2="$("$cli" "${wallet2[@]}" getnewaddress)"
+          [[ "$address1" == tunit1* ]]
+          [[ "$address2" == tunit1* ]]
+
+          "$cli" "${rpc1[@]}" addnode "127.0.0.1:29448" "onetry"
+          peer_count=0
+          for attempt in $(seq 1 30); do
+            peer_count="$("$cli" "${rpc1[@]}" getconnectioncount)"
+            if [[ "$peer_count" -ge 1 ]]; then break; fi
+            sleep 1
+          done
+          test "$peer_count" -ge 1
           "$cli" "${rpc1[@]}" getblockchaininfo
           "$cli" "${rpc2[@]}" getblockchaininfo
       - name: Record compiled binaries
