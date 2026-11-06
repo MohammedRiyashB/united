@@ -5,11 +5,16 @@ on:
     branches:
       - consensus/bitcoin-core-32.1-migration
       - integration/bitcoin-core-32.1-native
+      - integration/united-regtest-functional-tests
     paths:
       - ".github/workflows/bitcoin-core-upstream.yml"
       - "core/upstream.lock.toml"
       - "core/patches/**"
+      - "config/**"
       - "scripts/bootstrap-bitcoin-core.sh"
+      - "scripts/verify-public-testnet-genesis.py"
+      - "scripts/testnet-cpu-miner.py"
+      - "scripts/test-testnet-cpu-miner.py"
   workflow_dispatch:
 
 permissions:
@@ -27,6 +32,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake ninja-build pkg-config python3 libevent-dev libboost-dev libsqlite3-dev
+      - name: Test and syntax-check public-testnet miner
+        run: |
+          python3 scripts/test-testnet-cpu-miner.py
+          python3 -m py_compile scripts/testnet-cpu-miner.py
+      - name: Independently verify public-testnet genesis
+        run: python3 scripts/verify-public-testnet-genesis.py
       - name: Clone Bitcoin Core source
         run: |
           git clone --no-checkout https://github.com/bitcoin/bitcoin.git upstream
@@ -50,6 +61,8 @@ jobs:
           cd upstream
           git apply --check ../core/patches/0001-add-united-regtest.patch
           git apply ../core/patches/0001-add-united-regtest.patch
+          git apply --check ../core/patches/0002-add-united-public-testnet.patch
+          git apply ../core/patches/0002-add-united-public-testnet.patch
       - name: Configure minimal daemon build
         run: |
           cmake -S upstream -B upstream/build -G Ninja \
@@ -179,6 +192,176 @@ jobs:
           awk -v b="$received" 'BEGIN { exit !(b >= 1.0) }'
           "$cli" "${rpc1[@]}" getblockchaininfo
           "$cli" "${rpc2[@]}" getblockchaininfo
+      - name: Start two UNITED public-testnet nodes and verify network identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cli="upstream/build/bin/bitcoin-cli"
+          daemon="upstream/build/bin/bitcoind"
+          node1="$(mktemp -d)"
+          node2="$(mktemp -d)"
+          rpc_user="unitedtestci"
+          rpc_pass="ci-testnet-secret"
+          rpc1=(-chain=unitedtestnet -datadir="$node1" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29447)
+          rpc2=(-chain=unitedtestnet -datadir="$node2" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29449)
+          wallet1=("${rpc1[@]}" -rpcwallet=united-testnet-miner)
+          wallet2=("${rpc2[@]}" -rpcwallet=united-testnet-recipient)
+          cleanup() {
+            "$cli" "${rpc2[@]}" stop >/dev/null 2>&1 || true
+            "$cli" "${rpc1[@]}" stop >/dev/null 2>&1 || true
+            rm -rf "$node1" "$node2"
+          }
+          dump_testnet_logs() {
+            find "$node1" "$node2" -name debug.log -type f -print -exec tail -n 120 {} \; || true
+          }
+          trap cleanup EXIT
+
+          start_testnet_node() {
+            local label="$1"
+            local datadir="$2"
+            local rpcport="$3"
+            local p2pport="$4"
+            local startup_log="$datadir/bitcoind-startup.log"
+            local status=0
+            if "$daemon" -chain=unitedtestnet -datadir="$datadir" -daemonwait=1 \
+              -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport="$rpcport" \
+              -port="$p2pport" -bind="127.0.0.1:$p2pport" \
+              -natpmp=0 -discover=0 -listenonion=0 -fallbackfee=0.0002 -debug=1 >"$startup_log" 2>&1; then
+              cat "$startup_log"
+              echo "===== $label initialized ====="
+            else
+              status=$?
+              echo "===== $label startup failed (exit $status) =====" >&2
+              cat "$startup_log" >&2 || true
+              find "$datadir" -name debug.log -type f -print -exec tail -n 160 {} \; >&2 || true
+              dump_testnet_logs
+              return "$status"
+            fi
+          }
+          start_testnet_node node1 "$node1" 29447 29446
+          start_testnet_node node2 "$node2" 29449 29448
+
+          wait_rpc() {
+            local -n args=$1
+            for attempt in $(seq 1 60); do
+              if "$cli" "${args[@]}" getblockchaininfo >/dev/null 2>&1; then return 0; fi
+              sleep 1
+            done
+            dump_testnet_logs
+            return 1
+          }
+          wait_rpc rpc1
+          wait_rpc rpc2
+
+          expected="0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1"
+          test "$("$cli" "${rpc1[@]}" getblockhash 0)" = "$expected"
+          test "$("$cli" "${rpc2[@]}" getblockhash 0)" = "$expected"
+          "$cli" "${rpc1[@]}" getblockchaininfo | grep -q '"chain": "unitedtestnet"'
+          "$cli" "${rpc2[@]}" getblockchaininfo | grep -q '"chain": "unitedtestnet"'
+
+          "$cli" "${rpc1[@]}" createwallet "united-testnet-miner"
+          "$cli" "${rpc2[@]}" createwallet "united-testnet-recipient"
+          address1="$("$cli" "${wallet1[@]}" getnewaddress "" "bech32")"
+          address2="$("$cli" "${wallet2[@]}" getnewaddress "" "bech32")"
+          test -n "$address1"
+          test -n "$address2"
+
+          # Connect the two nodes before producing any blocks.
+          "$cli" "${rpc1[@]}" addnode "127.0.0.1:29448" "onetry"
+          peer_count=0
+          for attempt in $(seq 1 30); do
+            peer_count="$("$cli" "${rpc1[@]}" getconnectioncount)"
+            if [[ "$peer_count" -ge 1 ]]; then break; fi
+            sleep 1
+          done
+          test "$peer_count" -ge 1
+
+          # Use getblocktemplate + submitblock, not regtest-only generatetoaddress.
+          # Native SegWit payout addresses ensure the wallet spend has witness data.
+          # The miner must construct txid/wtxid Merkle trees and the BIP141 commitment.
+          python3 scripts/testnet-cpu-miner.py \
+            --cli "$cli" --datadir "$node1" --rpcport 29447 \
+            --rpcuser "$rpc_user" --rpcpassword "$rpc_pass" \
+            --address "$address1" --wallet "united-testnet-miner" --blocks 101
+
+          mined="$("$cli" "${rpc1[@]}" getblockcount)"
+          test "$mined" -eq 101
+          balance1="$("$cli" "${wallet1[@]}" getbalance)"
+          awk -v b="$balance1" 'BEGIN { exit !(b >= 50.0) }'
+
+          # Verify node 2 syncs the public-testnet blocks over P2P.
+          synced=0
+          for attempt in $(seq 1 60); do
+            height2="$("$cli" "${rpc2[@]}" getblockcount)"
+            if [[ "$height2" -ge 101 ]]; then synced=1; break; fi
+            sleep 1
+          done
+          test "$synced" -eq 1
+
+          txid="$("$cli" "${wallet1[@]}" sendtoaddress "$address2" 1.0)"
+          test -n "$txid"
+          python3 scripts/testnet-cpu-miner.py \
+            --cli "$cli" --datadir "$node1" --rpcport 29447 \
+            --rpcuser "$rpc_user" --rpcpassword "$rpc_pass" \
+            --address "$address1" --wallet "united-testnet-miner" --blocks 1
+
+          confirmed=0
+          for attempt in $(seq 1 60); do
+            height2="$("$cli" "${rpc2[@]}" getblockcount)"
+            if [[ "$height2" -ge 102 ]]; then confirmed=1; break; fi
+            sleep 1
+          done
+          test "$confirmed" -eq 1
+          received="$("$cli" "${wallet2[@]}" getbalance)"
+          awk -v b="$received" 'BEGIN { exit !(b >= 1.0) }'
+          "$cli" "${rpc1[@]}" getblockchaininfo
+          "$cli" "${rpc2[@]}" getblockchaininfo
       - name: Record compiled binaries
         run: |
           find upstream/build/bin -maxdepth 1 -type f -printf '%f\n' | sort
+      - name: Package verified UNITED testnet node (Ubuntu 24.04 x86_64)
+        shell: bash
+        run: |
+          set -euo pipefail
+          dist="$RUNNER_TEMP/united-testnet-dist"
+          mkdir -p "$dist/bin" "$dist/etc/united" "$dist/lib/systemd/system" "$dist/docs" "$dist/share/united"
+          install -m 0755 upstream/build/bin/bitcoind "$dist/bin/bitcoind"
+          install -m 0755 upstream/build/bin/bitcoin-cli "$dist/bin/bitcoin-cli"
+          install -m 0644 infra/public-testnet/unitedtestnet.conf.example "$dist/etc/united/unitedtestnet.conf.example"
+          install -m 0644 infra/public-testnet/unitedtestnet.service "$dist/lib/systemd/system/unitedtestnet.service"
+          install -m 0755 infra/public-testnet/install-node.sh "$dist/install-node.sh"
+          install -m 0644 scripts/testnet-cpu-miner.py "$dist/share/united/testnet-cpu-miner.py"
+          install -m 0644 LICENSE "$dist/LICENSE"
+          install -m 0644 docs/PUBLIC_TESTNET.md "$dist/docs/PUBLIC_TESTNET.md"
+          install -m 0644 docs/PUBLIC_TESTNET_MINING.md "$dist/docs/PUBLIC_TESTNET_MINING.md"
+          cat > "$dist/BUILD-METADATA.txt" <<EOF
+          UNITED Public Testnet candidate node bundle
+          Repository: $GITHUB_REPOSITORY
+          Source commit: $GITHUB_SHA
+          Upstream: Bitcoin Core v32.1 (see core/upstream.lock.toml)
+          Platform: Ubuntu 24.04 x86_64
+          Chain: unitedtestnet
+          P2P port: 29446/tcp
+          RPC port: 29447/tcp (loopback only; do not expose)
+          Genesis: 0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1
+          Status: candidate testnet; not a signed or audited production release
+          EOF
+          (
+            cd "$dist"
+            find bin etc lib docs share -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+            sha256sum install-node.sh LICENSE BUILD-METADATA.txt >> SHA256SUMS
+          )
+          archive="$RUNNER_TEMP/united-testnet-linux-x86_64-$GITHUB_SHA.tar.gz"
+          tar -C "$dist" -czf "$archive" .
+          (cd "$RUNNER_TEMP" && sha256sum "$(basename "$archive")" > "$(basename "$archive").sha256")
+          mkdir -p release
+          cp "$archive" "$archive.sha256" release/
+      - name: Upload verified node bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: united-testnet-linux-x86_64-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/united-testnet-linux-x86_64-${{ github.sha }}.tar.gz
+            ${{ runner.temp }}/united-testnet-linux-x86_64-${{ github.sha }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30

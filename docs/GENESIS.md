@@ -15,6 +15,22 @@ These constants are used only by the isolated `unitedregtest` chain in `core/pat
 
 The genesis timestamp is deliberately historical so that it cannot be ahead of a node's adjusted clock. Its easy proof-of-work limit and no-retargeting configuration are private-regtest-only and must not be reused on a public testnet or mainnet. The expected hash is checked by native chain-parameter assertions and CI RPC tests.
 
+## Public testnet candidate genesis (not yet released)
+
+The current `network/united-public-testnet` branch contains these candidate constants:
+
+- Timestamp text: `UNITED PUBLIC TESTNET GENESIS 2026-11-06`
+- Timestamp: `1793937600` (2026-11-06 04:00:00 UTC)
+- Nonce: `3565`
+- Compact target: `0x1f0fffff`
+- Merkle root: `d913e5cf8a09ccf5d4382c4a1e78d8e8b62c9bc0538240c05b26e2baa1d35446`
+- Header hash: `0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1`
+- Coinbase output script: `OP_RETURN UNITED PUBLIC TESTNET`, deliberately unspendable.
+
+The independent script `scripts/verify-public-testnet-genesis.py` serializes the coinbase transaction and 80-byte header, recomputes the Merkle root and SHA-256d hash, and checks proof of work against the target. The native node also asserts the same Merkle root and block hash.
+
+These are **candidate public-testnet constants** until the native patch and two-node CI pass and independent reviewers approve the network parameters. The testnet has no commissioned DNS seeds or public bootstrap peers yet, so this does not mean a live network exists.
+
 ## Public-testnet and mainnet genesis requirements
 
 For each public network, the genesis block is a consensus constant, not an admin setting. It must be generated only after its complete network consensus parameters are reviewed.

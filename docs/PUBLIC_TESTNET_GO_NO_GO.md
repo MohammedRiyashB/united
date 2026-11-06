@@ -1,16 +1,20 @@
 # UNITED Public Testnet Go/No-Go Checklist
 
-**Current decision: NO-GO.** The repository currently implements a private development regtest only. This checklist defines the evidence required before announcing or distributing a public UNITED testnet.
+**Current decision: NO-GO for public announcement.** The native public-testnet chain, two-node GBT mining/transfer and P2P integration passed CI on an earlier candidate revision. The current revision adds an installable node bundle and a witness-transaction-capable solo CPU miner; its fresh native CI is running. No public peer operators have been deployed. This checklist defines the evidence required before announcing a live public UNITED testnet.
 
 Testnet coins must be clearly labelled as valueless. Do not accept deposits, sell testnet coins, promise returns, or reuse any mainnet keys, addresses, data directories or credentials.
 
 ## Consensus and network identity
 
-- [ ] Publish and freeze a reviewed public-testnet consensus specification.
-- [ ] Decide and document the public-testnet PoW limit, target spacing/timespan, retarget algorithm, minimum-difficulty behavior and timestamp rules.
+- [x] Publish a public-testnet candidate consensus specification.
+- [ ] Freeze it after independent review and public change control.
+- [x] Document candidate testnet PoW limit, target spacing/timespan, retarget algorithm and minimum-difficulty behavior.
+- [ ] Independently review the exact rules and test vectors before launch.
 - [ ] Review coinbase maturity, subsidy schedule, money range, block weight and script/transaction activation settings in native C++ code.
-- [ ] Generate a testnet-only genesis coinbase and block header deterministically; independently reproduce the exact bytes, Merkle root and SHA-256d hash.
-- [ ] Select collision-checked four-byte message magic, P2P/RPC ports, Base58 prefixes and Bech32/Bech32m HRP.
+- [x] Generate a testnet-only genesis coinbase and header; an independent Python verifier reproduces the Merkle root, SHA-256d hash and proof of work.
+- [ ] Have a second independent reviewer reproduce the genesis byte-for-byte.
+- [x] Select candidate message magic, P2P/RPC ports, Base58 prefixes and Bech32 HRP.
+- [ ] Complete independent global collision checks before freezing them.
 - [ ] Configure independent testnet chain type and data directory. Verify mainnet, testnet and private regtest data cannot be confused.
 - [ ] Add positive and negative native consensus vectors, including invalid PoW, invalid compact targets, future timestamps, retarget boundaries, subsidy/money boundaries, invalid scripts, invalid transactions and reorgs.
 - [ ] Verify wrong-network nodes reject UNITED testnet blocks and addresses.
@@ -20,9 +24,12 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 - [ ] Re-check the upstream release for current support status, security advisories and dependencies.
 - [ ] Verify the upstream signed tag with an independently trusted maintainer keyring; record the full commit, signer fingerprint, source hashes and SBOM.
 - [ ] Run relevant upstream unit, functional, fuzz and sanitizer suites, not just a successful daemon compilation.
-- [ ] Run UNITED-specific two-node/multi-node tests for mining, wallet backup/restore, sends/receives, mempool relay, block sync, disconnections, partitions, restarts and competing-chain reorganization.
+- [x] An earlier native two-node public-testnet run (42164550405) passed 101 GBT/submitblock-mined blocks, coinbase-maturity/miner-balance checks, P2P block synchronization, a wallet send, a confirmation block and recipient-balance verification.
+- [x] Pass the upgraded witness-commitment-aware GBT miner in native run [42165119964](https://github.com/MohammedRiyashB/united/actions/runs/42165119964); offline serialization tests also pass in Go CI run [42165119995](https://github.com/MohammedRiyashB/united/actions/runs/42165119995).
+- [ ] Add multi-node backup/restore, disconnection, partition, restart and competing-chain reorganization tests.
 - [ ] Have independent reviewers inspect every consensus-critical patch. No unresolved critical/high findings.
-- [ ] Produce reproducible source builds and platform binaries with checksums, provenance and offline-signed release metadata.
+- [ ] Complete reproducible source builds and independent verification of candidate binary checksums/provenance.
+- [ ] Publish offline-signed release metadata, SBOM and a formal signed release.
 
 ## Public peer and operator infrastructure
 
@@ -30,7 +37,9 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 - [ ] Verify peer discovery, connection limits, anti-eclipse/Sybil mitigations, ban behavior and restart/recovery.
 - [ ] Publish a safe node operator guide with firewall rules. P2P may be public; wallet/admin RPC must remain localhost or private.
 - [ ] Operate independent archival/full nodes and monitoring for height, chain-tip age, peer diversity, reorg depth, hash rate, disk and uptime.
-- [ ] Publish mining instructions and at least two independent mining operator setups; no founder-only block production.
+- [x] Add an experimental solo CPU SHA-256d miner using local getblocktemplate/submitblock, BIP141 witness commitments, SegWit transaction hashes and local-cookie RPC authentication.
+- [x] Publish an operator mining guide for solo CPU testnet mining.
+- [ ] Publish and operate a production-scale Stratum pool for ASIC participation, and verify independent miner/operator setups; no founder-only block production.
 - [ ] Publish wallet install/build, address verification, backup/restore and transaction verification instructions.
 - [ ] Establish a monitored private vulnerability disclosure channel and response process before inviting public users.
 - [ ] Publish a public incident contact, issue triage process and testnet reset/recovery policy.
@@ -47,13 +56,20 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 
 ## Current evidence
 
+- [x] Candidate public-testnet chain type and distinct network configuration are in the native patch.
+- [x] Candidate genesis time is set to 2026-11-06 04:00 UTC to allow bootstrap miners to request templates during the initial release window. If launch slips beyond 24 hours from that timestamp, re-check initial-block-download behavior before freezing genesis.
 - [x] Native private `unitedregtest` chain patch exists.
-- [x] Pinned Bitcoin Core v32.1 daemon/CLI compilation succeeded in prior CI.
-- [x] Private-regtest genesis hash was verified in the baseline smoke test.
-- [ ] Latest corrected genesis timestamp/nonce patch passes a fresh full native CI run.
-- [ ] Two-node mining, wallet, transaction and P2P functional CI passes.
+- [x] Private-regtest two-node mining, wallet, transaction and P2P CI passed (run `42157048924`).
+- [x] Public-testnet candidate chain type, identity, genesis and address encodings are implemented in branch `network/united-public-testnet`.
+- [x] Independent Python genesis verifier has been added.
+- [x] Public-testnet patch applied and CMake configuration succeeded in the latest native runs.
+- [x] Earlier native candidate run 42164550405 compiled and passed the two-node public-testnet mining/transaction/P2P smoke test.
+- [x] Latest witness-commitment-aware miner build and end-to-end CI pass (run 42165119964).
+- [ ] Public network magic, ports, HRP and address prefixes are checked for collisions by independent reviewers.
+- [ ] Multiple public seed/bootstrap hosts are deployed and reachable from external networks.
+- [ ] An independently operated miner or pool is deployed and can produce valid blocks; CI's Python miner is only a test harness.
+- [ ] Reproducible signed binaries, checksums, SBOM and install documentation are published.
 - [ ] Full upstream and UNITED-specific consensus/security test suites pass.
-- [ ] Public-testnet parameters, genesis, seeds and release artifacts exist.
 - [ ] Independent operator and security reviews are complete.
 
-A green CI job for private regtest is necessary but not sufficient to release a public testnet.
+**Current decision remains NO-GO for public announcement.** Local CI passing does not create publicly reachable nodes. The testnet may be called live only after independent external nodes can connect, produce valid blocks and remain synchronized.

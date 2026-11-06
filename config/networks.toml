@@ -10,12 +10,12 @@ address_hrp = "UNSET"
 seed_nodes = []
 
 [testnet]
-name = "UNITED Testnet"
-message_start = "UNSET"
-p2p_port = 0
-rpc_port = 0
-address_hrp = "UNSET"
-seed_nodes = []
+name = "UNITED Public Testnet"
+message_start = "fab1d002"
+p2p_port = 29446
+rpc_port = 29447
+address_hrp = "tunit"
+seed_nodes = [] # no seed operators deployed yet; use addnode after peers are commissioned
 
 [regtest]
 name = "UNITED Private Regtest"
