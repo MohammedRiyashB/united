@@ -139,7 +139,7 @@ The separate `unitedtestnet` candidate uses the following values, distinct from 
 | Minimum-difficulty exception | Enabled after the upstream testnet delay rule |
 | BIP94 difficulty-retarget protection | Enabled |
 | No-retarget mode | Disabled |
-| Genesis hash | `00057ebf90a85fff3a45bd543a266d8ed59bc76ee3aadab4fc216416582686d0` |
+| Genesis hash | `0003d0389ed5b8854934bcb977dac8b78c4bc7cd8ea1d3223934a3ba79b033f1` |
 
 The implementation derives its initial activation/deployment defaults from Bitcoin Core v32.1 testnet4 mechanics, but removes Bitcoin testnet4 chainwork, assume-valid state, snapshots, seed lists and genesis. These parameters still require independent review and wider collision checks. The public-testnet candidate is not mainnet configuration.
 
