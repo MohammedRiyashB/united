@@ -49,6 +49,7 @@ jobs:
           test "$actual_commit" = "$expected_commit"
           git checkout --detach "$expected_commit"
           git show -s --format='Pinned upstream commit: %H%n%s' HEAD
+      # Patch 0002 is anchored to the private-regtest class tail before chain factories.
       - name: Apply UNITED native C++ patches
         run: |
           cd upstream
