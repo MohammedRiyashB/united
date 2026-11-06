@@ -13,6 +13,7 @@ on:
       - "config/**"
       - "scripts/bootstrap-bitcoin-core.sh"
       - "scripts/verify-public-testnet-genesis.py"
+      - "scripts/testnet-cpu-miner.py"
   workflow_dispatch:
 
 permissions:
@@ -30,6 +31,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake ninja-build pkg-config python3 libevent-dev libboost-dev libsqlite3-dev
+      - name: Check public-testnet miner syntax
+        run: python3 -m py_compile scripts/testnet-cpu-miner.py
       - name: Independently verify public-testnet genesis
         run: python3 scripts/verify-public-testnet-genesis.py
       - name: Clone Bitcoin Core source
@@ -220,7 +223,7 @@ jobs:
             if "$daemon" -chain=unitedtestnet -datadir="$datadir" -daemonwait=1 \
               -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport="$rpcport" \
               -port="$p2pport" -bind="127.0.0.1:$p2pport" \
-              -natpmp=0 -discover=0 -listenonion=0 -debug=1 >"$startup_log" 2>&1; then
+              -natpmp=0 -discover=0 -listenonion=0 -fallbackfee=0.0002 -debug=1 >"$startup_log" 2>&1; then
               cat "$startup_log"
               echo "===== $label initialized ====="
             else
@@ -253,13 +256,14 @@ jobs:
           "$cli" "${rpc1[@]}" getblockchaininfo | grep -q '"chain": "unitedtestnet"'
           "$cli" "${rpc2[@]}" getblockchaininfo | grep -q '"chain": "unitedtestnet"'
 
-          "$cli" "${rpc1[@]}" createwallet "united-testnet-wallet"
-          "$cli" "${rpc2[@]}" createwallet "united-testnet-wallet"
-          address1="$("$cli" "${wallet1[@]}" getnewaddress)"
-          address2="$("$cli" "${wallet2[@]}" getnewaddress)"
-          [[ "$address1" == tunit1* ]]
-          [[ "$address2" == tunit1* ]]
+          "$cli" "${rpc1[@]}" createwallet "united-testnet-miner"
+          "$cli" "${rpc2[@]}" createwallet "united-testnet-recipient"
+          address1="$("$cli" "${wallet1[@]}" getnewaddress "" "legacy")"
+          address2="$("$cli" "${wallet2[@]}" getnewaddress "" "legacy")"
+          test -n "$address1"
+          test -n "$address2"
 
+          # Connect the two nodes before producing any blocks.
           "$cli" "${rpc1[@]}" addnode "127.0.0.1:29448" "onetry"
           peer_count=0
           for attempt in $(seq 1 30); do
@@ -268,6 +272,45 @@ jobs:
             sleep 1
           done
           test "$peer_count" -ge 1
+
+          # Use getblocktemplate + submitblock, not regtest-only generatetoaddress.
+          # Legacy wallet addresses keep the CI transactions non-witness so this
+          # intentionally small test miner needs no witness commitment builder.
+          python3 scripts/testnet-cpu-miner.py \
+            --cli "$cli" --datadir "$node1" --rpcport 29447 \
+            --rpcuser "$rpc_user" --rpcpassword "$rpc_pass" \
+            --address "$address1" --wallet "united-testnet-miner" --blocks 101
+
+          mined="$("$cli" "${rpc1[@]}" getblockcount)"
+          test "$mined" -eq 101
+          balance1="$("$cli" "${wallet1[@]}" getbalance)"
+          awk -v b="$balance1" 'BEGIN { exit !(b >= 50.0) }'
+
+          # Verify node 2 syncs the public-testnet blocks over P2P.
+          synced=0
+          for attempt in $(seq 1 60); do
+            height2="$("$cli" "${rpc2[@]}" getblockcount)"
+            if [[ "$height2" -ge 101 ]]; then synced=1; break; fi
+            sleep 1
+          done
+          test "$synced" -eq 1
+
+          txid="$("$cli" "${wallet1[@]}" sendtoaddress "$address2" 1.0)"
+          test -n "$txid"
+          python3 scripts/testnet-cpu-miner.py \
+            --cli "$cli" --datadir "$node1" --rpcport 29447 \
+            --rpcuser "$rpc_user" --rpcpassword "$rpc_pass" \
+            --address "$address1" --wallet "united-testnet-miner" --blocks 1
+
+          confirmed=0
+          for attempt in $(seq 1 60); do
+            height2="$("$cli" "${rpc2[@]}" getblockcount)"
+            if [[ "$height2" -ge 102 ]]; then confirmed=1; break; fi
+            sleep 1
+          done
+          test "$confirmed" -eq 1
+          received="$("$cli" "${wallet2[@]}" getbalance)"
+          awk -v b="$received" 'BEGIN { exit !(b >= 1.0) }'
           "$cli" "${rpc1[@]}" getblockchaininfo
           "$cli" "${rpc2[@]}" getblockchaininfo
       - name: Record compiled binaries
