@@ -91,7 +91,11 @@ async function createFlow(){
 }
 function accountSyncFlow(){
   showModal("Save and sync your wallet?",`<p class="wallet-muted">Connect a Google account to associate this wallet with your UNITED account. This is optional. Your recovery phrase and private keys stay encrypted locally and are never uploaded.</p><button class="wallet-primary" id="connect-google-wallet">Continue with Google</button><button class="wallet-secondary" id="skip-google-wallet" style="margin-top:10px">Skip for now</button>`);
-  $("connect-google-wallet").onclick=()=>window.dispatchEvent(new Event("united-google-connect"));
+  $("connect-google-wallet").onclick=()=>{
+    const connected=()=>{window.removeEventListener("united-google-connected",connected);protectWalletFlow();};
+    window.addEventListener("united-google-connected",connected);
+    window.dispatchEvent(new Event("united-google-connect"));
+  };
   $("skip-google-wallet").onclick=()=>protectWalletFlow();
 }
 function protectWalletFlow(){
