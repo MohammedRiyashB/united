@@ -21,12 +21,12 @@ The public-testnet candidate uses a real retarget schedule; it does not inherit 
 The GitHub Actions workflow:
 1. Independently verifies the candidate public-testnet genesis in Python.
 2. Clones the exact Bitcoin Core v32.1 release.
-2. Verifies the locked tag object and commit IDs.
-3. Applies both UNITED C++ patches.
-4. Compiles the wallet-enabled native daemon and CLI.
-5. Starts two isolated `unitedregtest` nodes and checks both genesis hashes.
-6. Creates independent private-regtest wallets, mines past coinbase maturity, checks a TCP P2P connection, sends a transaction, confirms a block and checks node synchronization/balance.
-7. Starts two public-testnet nodes, checks both testnet genesis hashes and `tunit1` addresses, and verifies their TCP P2P handshake.
+3. Verifies the locked tag object and commit IDs.
+4. Applies both UNITED C++ patches.
+5. Compiles the wallet-enabled native daemon and CLI.
+6. Starts two isolated `unitedregtest` nodes and checks both genesis hashes.
+7. Creates independent private-regtest wallets, mines past coinbase maturity, checks a TCP P2P connection, sends a transaction, confirms a block and checks node synchronization/balance.
+8. Starts two public-testnet nodes, checks both testnet genesis hashes and `tunit1` addresses, and verifies their TCP P2P handshake.
 
 Earlier candidate revisions passed the two-node private-regtest and public-testnet smoke tests. However, the audited `main` commit did not yet have a native workflow run because the workflow lacked a push trigger for `main`; this audit adds that trigger. Do not claim the audited `main` revision has passed native validation until its new workflow run succeeds on both architectures. The workflow checks the pinned tag object and commit but does not yet establish independent GPG signer trust; release-grade provenance still requires independent signer-fingerprint verification.
 
