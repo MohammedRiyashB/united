@@ -84,7 +84,15 @@ diff --git a/src/kernel/chainparams.cpp b/src/kernel/chainparams.cpp
 index 0000000..0000000 100644
 --- a/src/kernel/chainparams.cpp
 +++ b/src/kernel/chainparams.cpp
-@@ -617,0 +617,79 @@
+@@ -757,8 +757,87 @@
+         bech32_hrp = "unitrt";
+ 
+         m_headers_sync_params = HeadersSyncParams{
+             .commitment_period = 275,
+             .redownload_buffer_size = 7017,
+         };
+     }
+ };
 +/**
 + * UNITED public test network. This is a valueless network for public wallet,
 + * mining and P2P integration testing. Its difficulty is easier than mainnet,
