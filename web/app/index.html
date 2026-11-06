@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d18">
+  <title>UNITED Network · Testnet</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="brand"><div class="mark">U</div><div><strong>UNITED</strong><span>PUBLIC TESTNET</span></div></header>
+    <section class="panel" id="auth-panel">
+      <p class="eyebrow">WELCOME TO THE NETWORK</p>
+      <h1>One account.<br><em>Your network identity.</em></h1>
+      <p class="muted">Sign in to access the UNITED testnet interface.</p>
+      <div class="providers">
+        <button id="google" class="provider">Continue with Google</button>
+        <button id="github" class="provider">Continue with GitHub</button>
+        <button id="guest" class="provider secondary">Continue as guest</button>
+      </div>
+      <div class="rule"><span>OR WITH EMAIL</span></div>
+      <form id="email-form">
+        <label for="email">Email address</label>
+        <input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters">
+        <div class="actions"><button class="primary" type="submit" id="signin">Sign in</button><button class="text-button" type="button" id="signup">Create account</button></div>
+      </form>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <p class="footnote">Your sign-in authenticates your account. It does not store or back up wallet private keys.</p>
+    </section>
+    <section class="panel account hidden" id="account-panel">
+      <p class="eyebrow">AUTHENTICATED SESSION</p>
+      <h1>You're connected.</h1>
+      <p class="muted" id="identity"></p>
+      <div class="notice"><strong>Wallet security</strong><p>Wallet creation and encrypted key backup must be implemented against UNITED's verified address and signing format. Never enter a seed phrase or private key into this sign-in form.</p></div>
+      <button id="logout" class="provider secondary">Sign out</button>
+    </section>
+    <footer>UNITED Network · Experimental testnet interface · No real-value assets</footer>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
