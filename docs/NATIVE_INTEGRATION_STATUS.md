@@ -3,7 +3,7 @@
 **Base upstream:** Bitcoin Core `v32.1`  
 **Pinned commit:** `f0de87f040621468b956f01f526a43a010310501`  
 **Current public-testnet branch:** `network/united-public-testnet`  
-**Status:** private-regtest end-to-end test passed; an earlier public-testnet two-node mining/transaction smoke test passed; the strengthened witness-aware test miner is under a fresh native CI run. The public network is not live because no external bootstrap peers/miners have been deployed.
+**Status:** private-regtest and strengthened public-testnet two-node end-to-end CI both passed, including native compile, genesis identity, wallet creation, GBT/submitblock mining, P2P sync and a confirmed wallet transfer. The public network is not externally live because no bootstrap peers/miners have been deployed.
 
 ## 1. Private UNITED regtest — verified
 
@@ -50,7 +50,7 @@ GitHub Actions run [42164550405](https://github.com/MohammedRiyashB/united/actio
 - a 1 UNITED wallet transaction was sent;
 - the miner produced block 102 and the second wallet's balance assertion passed.
 
-This run used legacy/non-witness test transactions and a simpler no-witness coinbase miner. The miner has since been strengthened to build and validate the BIP141 coinbase witness reserved value and commitment.
+The strengthened CI miner constructs the BIP141 coinbase witness reserved value and validates the template witness commitment. It deliberately rejects witness-bearing mempool transactions; CI uses legacy wallet transactions. This is a test harness, not a production miner.
 
 ## 4. Latest strengthened validation
 
@@ -59,10 +59,10 @@ Go CI:
 - [42165119995](https://github.com/MohammedRiyashB/united/actions/runs/42165119995) passed Go checks plus the expanded miner unit tests.
 
 Latest native run:
-- [42165119964](https://github.com/MohammedRiyashB/united/actions/runs/42165119964) has passed public-testnet miner unit/syntax tests, independent genesis verification, pinned source verification, both patch applications and CMake configuration.
-- Native daemon/CLI compile is still running; the private-regtest and strengthened public-testnet mining/transaction steps remain pending in that run.
+- [42165119964](https://github.com/MohammedRiyashB/united/actions/runs/42165119964) completed successfully.
+- All 13 job steps passed: miner unit/syntax checks, independent genesis verification, exact upstream source pin, both native patches, CMake configuration, native daemon/CLI compilation, private-regtest two-node functional tests, public-testnet two-node startup, genesis/network identity, wallet creation, GBT/submitblock mining through block 101, P2P synchronization, 1 UNITED test transaction, block 102 confirmation, and recipient balance verification.
 
-Do not claim the strengthened miner test passed until this run's end-to-end step completes successfully.
+This is strong local integration evidence, but it is not proof of public reachability or independent consensus/security review.
 
 ## 5. Remaining blockers before public announcement
 
