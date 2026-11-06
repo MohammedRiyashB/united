@@ -1,0 +1,28 @@
+# Example only. Copy to /etc/united/unitedtestnet.conf and replace credentials.
+# Keep this file readable only by root and the united service group (chmod 640).
+# This is a PUBLIC TESTNET candidate; all coins are valueless test coins.
+
+[unitedtestnet]
+server=1
+listen=1
+daemon=0
+discover=1
+dnsseed=0
+fixedseeds=0
+upnp=0
+natpmp=0
+listenonion=0
+port=29446
+maxconnections=128
+
+# RPC must stay local or on a private management interface.
+rpcport=29447
+rpcbind=127.0.0.1
+rpcallowip=127.0.0.1
+rpcuser=REPLACE_WITH_UNIQUE_RPC_USERNAME
+rpcpassword=REPLACE_WITH_LONG_RANDOM_RPC_PASSWORD
+
+# Manually add verified bootstrap peers after they exist.
+# addnode=REPLACE_WITH_VERIFIED_PEER_IP:29446
+
+# This file is consumed by the foreground systemd service.

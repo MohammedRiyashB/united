@@ -1,5 +1,6 @@
-# All network identifiers remain placeholders until collision checks and
-# integration tests are performed. Never copy Bitcoin's mainnet identifiers.
+# Mainnet and public-testnet identifiers remain placeholders pending review.
+# The private-regtest values below are for local development only.
+# Never copy Bitcoin's mainnet identifiers.
 [mainnet]
 name = "UNITED Mainnet"
 message_start = "UNSET"
@@ -9,17 +10,17 @@ address_hrp = "UNSET"
 seed_nodes = []
 
 [testnet]
-name = "UNITED Testnet"
-message_start = "UNSET"
-p2p_port = 0
-rpc_port = 0
-address_hrp = "UNSET"
-seed_nodes = []
+name = "UNITED Public Testnet"
+message_start = "fab1d002"
+p2p_port = 29446
+rpc_port = 29447
+address_hrp = "tunit"
+seed_nodes = [] # no seed operators deployed yet; use addnode after peers are commissioned
 
 [regtest]
-name = "UNITED Regtest"
-message_start = "UNSET"
-p2p_port = 0
-rpc_port = 0
-address_hrp = "UNSET"
+name = "UNITED Private Regtest"
+message_start = "fab1d001"
+p2p_port = 29444
+rpc_port = 29443
+address_hrp = "unitrt"
 seed_nodes = []

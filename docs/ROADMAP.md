@@ -1,5 +1,10 @@
 # UNITED Development Roadmap
 
+**Current implementation checkpoint — 2026-11-06:** private-regtest two-node CI has passed. A separate public-testnet chain implementation is being added and validated on `network/united-public-testnet`; live public bootstrap peers and miners are still not deployed.
+
+**Earlier checkpoint — 2026-11-06:** the Bitcoin Core v32.1-derived private `unitedregtest` chain type is implemented on the integration branch. The original native build/genesis smoke test passed. The two-node functional sequence exposed a future-dated genesis timestamp; the timestamp, nonce and hash have been corrected and a fresh native CI validation is running. Public testnet is the next network milestone, but it is not ready to release until every item in [PUBLIC_TESTNET_GO_NO_GO.md](PUBLIC_TESTNET_GO_NO_GO.md) is evidenced and independently reviewed.
+
+
 Dates are deliberately not promised. Each phase exits only when its acceptance criteria pass.
 
 ## Phase 0 — Governance, identity and protocol decisions

@@ -2,7 +2,7 @@
 
 **United** is a proposed independent, SHA-256d proof-of-work cryptocurrency with a UTXO ledger and a nominal supply cap of 21,000,000 UNITED.
 
-> **Project status: engineering specification + tested monetary-policy and regtest PoW prototypes. Not a live blockchain.** This repository does not yet contain a production full node, peer-to-peer network, mining implementation, wallet, genesis block, seed nodes, explorer, or audited consensus code. Do not send funds to an address claiming to be a UNITED mainnet address. No UNITED mainnet coins currently exist.
+> **Project status: the private-regtest and UNITED public-testnet two-node native functional tests have passed. The public testnet is still not externally reachable or announced as live.** The candidate branch contains a distinct `unitedtestnet` chain, genesis, network identifiers and an experimental solo CPU GBT miner. The repository now prepares a checksum-verified Ubuntu 24.04 x86_64 node bundle after native CI passes. No public bootstrap hosts, independent external peer tests, Stratum pool, signed release, or independent consensus audit are complete. Testnet coins are valueless. Do not send real funds. No UNITED mainnet coins exist.
 
 ## Current agreed design
 
@@ -30,12 +30,18 @@ The exact scheduled subsidy issuance after smallest-unit integer halving is **20
 | Architecture, threat model, roadmap | Drafted |
 | Monetary schedule reference implementation | Implemented and unit-tested |
 | SHA-256d header PoW demo | Implemented and unit-tested (regtest only) |
-| Network identities / genesis block | Not generated; deliberately unset |
-| Production blockchain core | Not implemented |
-| P2P node, miner, pool | Not implemented |
-| Mobile / desktop wallet | Not implemented |
-| Explorer / indexer / API | Not implemented |
-| Testnet | Not running |
+| Private `unitedregtest` chain parameters/genesis | Implemented and two-node functional CI passed |
+| Bitcoin Core-derived full-node daemon/CLI | Native daemon/CLI build and startup tests passed |
+| Private-regtest mining, wallet, transaction, P2P | Two-node end-to-end CI passed |
+| Public testnet native chain type, genesis, two-node mining, wallet transfer and P2P | Implemented and passed native CI in `network/united-public-testnet` |
+| Public seed nodes/bootstrap peers | Not deployed |
+| Public solo mining | Experimental single-process Python GBT miner implemented; not ASIC/Stratum software |
+| Stratum pool / mining coordinator | Not implemented |
+| Public testnet node bundle | Checksum-verified CI artifact is being added; not a signed production release |
+| Mainnet chain parameters/genesis | Not implemented |
+| Mobile / desktop wallet release | Not implemented |
+| Explorer / indexer / API | Contract draft only; not implemented |
+| Public testnet | Native integration validated in CI; not externally live (no public bootstrap nodes) |
 | Mainnet | Not launched; not launch-ready |
 | External audit | Not performed |
 
@@ -66,7 +72,7 @@ Planned components:
 - Explorer/indexer: independently verifiable read-only chain data.
 - Infrastructure: seed nodes, monitoring, release signing and reproducible builds.
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for component boundaries and trust assumptions.
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for component boundaries and trust assumptions. The public-testnet candidate parameters are recorded in [`config/united-testnet.toml`](config/united-testnet.toml), with release gates in [`docs/PUBLIC_TESTNET_GO_NO_GO.md`](docs/PUBLIC_TESTNET_GO_NO_GO.md).
 
 ## Mainnet is gated, not a checkbox
 

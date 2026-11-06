@@ -29,3 +29,5 @@ jobs:
         run: go test -race -count=1 ./...
       - name: Build CLI
         run: go build ./cmd/united-params ./cmd/united-powdemo
+      - name: Test public-testnet CPU miner serialization
+        run: python3 scripts/test-testnet-cpu-miner.py
