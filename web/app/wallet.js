@@ -174,7 +174,12 @@ function renderCreatePassword() {
       const created={id:crypto.randomUUID(),name:"My UNITED Wallet",address:evmAddress,chainAccounts,secretType:"mnemonic",secret:phrase,createdAt:Date.now()};
       wallets=[created];activeWallet=created;activeWalletId=created.id;unlockedPassword=p;
       await saveVault(p);renderPhrase(phrase);
-    }catch(err){$("wallet-inline-error").textContent=err.message||"Wallet creation failed."; $("wallet-inline-error").hidden=false;}
+    }catch(err){
+      const submit=$("create-vault-form")?.querySelector('button[type="submit"]');
+      if(submit){submit.disabled=false;submit.textContent="Generate wallet ›";}
+      $("wallet-inline-error").textContent=err.message||"Wallet creation failed.";
+      $("wallet-inline-error").hidden=false;
+    }
   };
 }
 
@@ -225,6 +230,8 @@ function renderImport() {
   $("import-form").onsubmit=async e=>{
     e.preventDefault();
     try{
+      const submit=$("import-form").querySelector('button[type="submit"]');
+      submit.disabled=true;submit.textContent="Initializing networks…";
       const secret=$("import-secret").value.trim();
       let imported,normalizedSecret;
       if(importKind==="phrase"){
@@ -245,7 +252,12 @@ function renderImport() {
       if(wallets.length && unlockedPassword!==p)throw new Error("Unlock your existing wallet first to add another wallet.");
       wallets.push(entry);activeWallet=entry;activeWalletId=entry.id;unlockedPassword=p;
       await saveVault(p);renderGoogleOffer();
-    }catch(err){$("wallet-inline-error").textContent=err.message||"The wallet could not be imported."; $("wallet-inline-error").hidden=false;}
+    }catch(err){
+      const submit=$("import-form")?.querySelector('button[type="submit"]');
+      if(submit){submit.disabled=false;submit.textContent="Import wallet ›";}
+      $("wallet-inline-error").textContent=err.message||"The wallet could not be imported.";
+      $("wallet-inline-error").hidden=false;
+    }
   };
 }
 
