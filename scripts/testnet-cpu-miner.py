@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Small test-only SHA-256d miner for UNITED public-testnet CI.
+"""Experimental solo CPU SHA-256d miner for UNITED public-testnet bootstrap/testing.
 
-Uses Bitcoin Core getblocktemplate/submitblock. It is not a production miner,
-pool implementation, Stratum client, or optimized mining program.
+Uses a local Bitcoin Core getblocktemplate/submitblock RPC. It is single-process
+and intentionally simple; it is not a Stratum server, mining pool, or ASIC miner.
+Run it against your own UNITED testnet node and never expose node RPC publicly.
 """
 
 from __future__ import annotations
@@ -130,14 +131,18 @@ def merkle_root(transactions: list[bytes]) -> bytes:
 class BitcoinCLI:
     def __init__(self, args: argparse.Namespace):
         self.args = args
+        if bool(args.rpcuser) != bool(args.rpcpassword):
+            raise ValueError("provide both --rpcuser and --rpcpassword, or neither to use the local RPC cookie")
         self.base = [
             args.cli,
             "-chain=unitedtestnet",
             f"-datadir={args.datadir}",
             f"-rpcport={args.rpcport}",
-            f"-rpcuser={args.rpcuser}",
-            f"-rpcpassword={args.rpcpassword}",
         ]
+        # When credentials are omitted, bitcoin-cli uses the node's cookie file.
+        # Run the miner as the same OS user as bitcoind so the cookie stays private.
+        if args.rpcuser:
+            self.base.extend([f"-rpcuser={args.rpcuser}", f"-rpcpassword={args.rpcpassword}"])
 
     def call(self, method: str, *params: str, wallet: str | None = None) -> str:
         command = [*self.base]
@@ -180,12 +185,12 @@ def mine_one(cli: BitcoinCLI, address: str, wallet: str, height_expected: int) -
     for tx in mempool_txs:
         if tx.get("txid") is None or tx.get("hash") is None or tx.get("data") is None:
             raise RuntimeError("template transaction is missing txid/hash/data")
-        if tx["hash"] != tx["txid"]:
-            raise RuntimeError(
-                "witness transactions are not supported by this minimal CI miner; "
-                "the test uses legacy inputs so the mempool should contain no witness txs"
-            )
-        raw_mempool.append(bytes.fromhex(tx["data"]))
+        raw_transaction = bytes.fromhex(tx["data"])
+        if not raw_transaction:
+            raise RuntimeError("template transaction data is empty")
+        # The txid tree uses txid; the BIP141 witness tree uses wtxid.
+        # Keeping both hashes distinct allows SegWit transactions in the block.
+        raw_mempool.append(raw_transaction)
         txid_leaves.append(bytes.fromhex(tx["txid"])[::-1])
         wtxid_leaves.append(bytes.fromhex(tx["hash"])[::-1])
 
@@ -241,8 +246,8 @@ def main() -> int:
     parser.add_argument("--cli", required=True)
     parser.add_argument("--datadir", required=True)
     parser.add_argument("--rpcport", required=True, type=int)
-    parser.add_argument("--rpcuser", required=True)
-    parser.add_argument("--rpcpassword", required=True)
+    parser.add_argument("--rpcuser", help="optional; omit both RPC flags to use the local cookie file")
+    parser.add_argument("--rpcpassword", help="optional; must be supplied together with --rpcuser")
     parser.add_argument("--address", required=True)
     parser.add_argument("--wallet", required=True, help="wallet name containing --address")
     parser.add_argument("--blocks", type=int, default=1)
