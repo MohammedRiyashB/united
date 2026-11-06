@@ -312,14 +312,14 @@ function renderDashboard() {
   activeChainId=selectedNetwork.id;
   const selectedAddress=addressForNetwork(activeWallet,selectedNetwork.id);
   const selectedState=networkStates[selectedNetwork.id];
-  pageShell(\`
+  pageShell(`
     <div class="uw-dashboard">
       <header class="uw-dashboard-header">
         <div class="uw-dashboard-brand">${logoMark(34)}<b>UNITED</b></div>
         <div class="uw-header-actions"><button aria-label="Refresh network data" title="Refresh" id="refresh-networks">↻</button><button aria-label="Notifications" title="Notifications" data-coming="Notifications">♧</button></div>
       </header>
       <label class="uw-network-label" for="network-picker">ACTIVE MAINNET</label>
-      <select class="uw-network-picker" id="network-picker">${NETWORKS.map(n=>\`<option value="${n.id}" ${n.id===activeChainId?"selected":""}>${esc(n.name)}</option>\`).join("")}</select>
+      <select class="uw-network-picker" id="network-picker">${NETWORKS.map(n=>`<option value="${n.id}" ${n.id===activeChainId?"selected":""}>${esc(n.name)}</option>`).join("")}</select>
       <section class="uw-total-card">
         <div class="uw-total-heading">Native balance · ${esc(selectedNetwork.name)}</div>
         <div class="uw-total-value" id="selected-balance">${selectedState?.online?esc(selectedState.balance):"—"} <small>${selectedNetwork.symbol}</small></div>
@@ -345,7 +345,7 @@ function renderDashboard() {
       <nav class="uw-bottom-nav"><button class="active" data-nav="dashboard"><span>⌂</span>Home</button><button data-nav="activity"><span>◷</span>Activity</button><button data-nav="explore"><span>◈</span>Explore</button><button data-nav="settings"><span>⚙</span>Settings</button></nav>
       <div id="wallet-notice" class="uw-notice" hidden></div>
     </div>
-  \`);
+  `);
   $("network-picker").onchange=e=>{activeChainId=e.target.value;localStorage.setItem("united.active.network",activeChainId);renderDashboard();};
   $("refresh-networks").onclick=refreshAllNetworkStates;
   $("refresh-list").onclick=refreshAllNetworkStates;
@@ -368,11 +368,11 @@ function renderNetworkRow(network) {
   const selected=network.id===activeChainId;
   const balance=state?.online?state.balance+" "+network.symbol:(address?(state?.error||"Connecting…"):"Address unavailable for this import");
   const status=state?.online?"RPC verified · block "+Number(state.blockHeight||0).toLocaleString():(state?.error||"Not checked");
-  return \`<button class="uw-chain-row ${selected?"selected":""}" data-chain="${network.id}">
+  return `<button class="uw-chain-row ${selected?"selected":""}" data-chain="${network.id}">
     <span class="uw-chain-symbol">${network.id==="bitcoin"?"₿":network.id==="ethereum"?"Ξ":network.id==="polygon"?"⬡":network.id==="solana"?"◎":"◆"}</span>
     <span class="uw-chain-copy"><b>${esc(network.name)}</b><small>${address?esc(short(address)):"No derived address"}</small></span>
     <span class="uw-chain-balance"><b>${esc(balance)}</b><small>${esc(status)}</small></span>
-  </button>\`;
+  </button>`;
 }
 
 function updateDashboardNetworkSummary() {
@@ -395,11 +395,11 @@ function updateDashboardNetworkSummary() {
   if(activity){
     const history=state?.history;
     if(Array.isArray(history)&&history.length){
-      activity.innerHTML=history.slice(0,3).map(tx=>\`<div class="uw-mini-tx"><b>${tx.confirmed?"Confirmed":"Pending"} · ${esc(network.symbol)}</b><small>${esc(short(tx.id))} · ${tx.timestamp?new Date(tx.timestamp*1000).toLocaleString():"time unavailable"}</small></div>\`).join("");
+      activity.innerHTML=history.slice(0,3).map(tx=>`<div class="uw-mini-tx"><b>${tx.confirmed?"Confirmed":"Pending"} · ${esc(network.symbol)}</b><small>${esc(short(tx.id))} · ${tx.timestamp?new Date(tx.timestamp*1000).toLocaleString():"time unavailable"}</small></div>`).join("");
     }else if(state?.online){
-      activity.innerHTML=\`<b>No indexed recent activity</b><small>${esc(state.historyNote||"No transactions were returned for this address.")}</small>\`;
+      activity.innerHTML=`<b>No indexed recent activity</b><small>${esc(state.historyNote||"No transactions were returned for this address.")}</small>`;
     }else{
-      activity.innerHTML=\`<b>Activity unavailable</b><small>${esc(state?.error||"Waiting for network connection.")}</small>\`;
+      activity.innerHTML=`<b>Activity unavailable</b><small>${esc(state?.error||"Waiting for network connection.")}</small>`;
     }
   }
 }
@@ -422,13 +422,13 @@ async function refreshAllNetworkStates() {
 
 function renderReceive() {
   const defaultNetwork=NETWORKS.find(n=>n.id===activeChainId)||NETWORKS[0];
-  pageShell(\`
+  pageShell(`
     <div class="uw-flow-page">
       <header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">RECEIVE CRYPTO</span></header>
       <h1>Receive assets</h1>
       <p class="uw-subtitle">Choose the exact mainnet. Only send the selected asset over its matching network.</p>
       <label class="uw-network-label" for="receive-network">NETWORK</label>
-      <select class="uw-network-picker" id="receive-network">${NETWORKS.map(n=>\`<option value="${n.id}" ${n.id===defaultNetwork.id?"selected":""}>${esc(n.name)} · ${n.symbol}</option>\`).join("")}</select>
+      <select class="uw-network-picker" id="receive-network">${NETWORKS.map(n=>`<option value="${n.id}" ${n.id===defaultNetwork.id?"selected":""}>${esc(n.name)} · ${n.symbol}</option>`).join("")}</select>
       <div class="uw-receive-card">
         <div class="uw-receive-icon">${logoMark(58)}</div>
         <b id="receive-asset-name">${esc(defaultNetwork.name)} address</b>
@@ -437,7 +437,7 @@ function renderReceive() {
       </div>
       <div class="uw-warning"><b>Network matching is critical.</b><span>Bitcoin must be sent to the Bitcoin address, Solana to the Solana address, and EVM assets to the matching EVM chain. Sending on the wrong network can permanently lose funds.</span></div>
       <p class="uw-form-hint">Your public address can be shared. Never share the recovery phrase or private keys.</p>
-    </div>\`);
+    </div>`);
   bindBack("dashboard");
   const update=()=>{
     const network=NETWORKS.find(n=>n.id===$("receive-network").value)||NETWORKS[0];
@@ -458,16 +458,16 @@ function renderReceive() {
 
 function renderActivity() {
   const network=NETWORKS.find(n=>n.id===activeChainId)||NETWORKS[0];
-  pageShell(\`
+  pageShell(`
     <div class="uw-flow-page">
       <header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">ON-CHAIN HISTORY</span></header>
       <h1>Activity</h1>
       <p class="uw-subtitle">Transactions are fetched from the selected mainnet's public data source.</p>
       <label class="uw-network-label" for="activity-network">NETWORK</label>
-      <select class="uw-network-picker" id="activity-network">${NETWORKS.map(n=>\`<option value="${n.id}" ${n.id===network.id?"selected":""}>${esc(n.name)}</option>\`).join("")}</select>
+      <select class="uw-network-picker" id="activity-network">${NETWORKS.map(n=>`<option value="${n.id}" ${n.id===network.id?"selected":""}>${esc(n.name)}</option>`).join("")}</select>
       <div id="activity-list" class="uw-activity-list"><div class="uw-activity-empty"><span>◷</span><b>Loading on-chain history</b><small>Reading public network data…</small></div></div>
       <p class="uw-form-hint">Ethereum, Polygon and BNB standard JSON-RPC endpoints do not provide address-indexed history. Use the chain explorer for full indexed history.</p>
-    </div>\`);
+    </div>`);
   bindBack("dashboard");
   const load=()=>{
     activeChainId=$("activity-network").value;
@@ -479,24 +479,24 @@ function renderActivity() {
       return;
     }
     if(!state.online){
-      list.innerHTML=\`<div class="uw-activity-empty"><b>Unable to load history</b><small>${esc(state.error||"Provider unavailable")}</small></div>\`;
+      list.innerHTML=`<div class="uw-activity-empty"><b>Unable to load history</b><small>${esc(state.error||"Provider unavailable")}</small></div>`;
       return;
     }
     if(!Array.isArray(state.history)){
       const net=NETWORKS.find(n=>n.id===activeChainId);
-      list.innerHTML=\`<div class="uw-activity-empty"><b>History indexer not connected</b><small>${esc(state.historyNote||"This RPC provides balances and chain status only.")}</small><a href="${net.explorer}" target="_blank" rel="noopener noreferrer">Open ${esc(net.name)} explorer</a></div>\`;
+      list.innerHTML=`<div class="uw-activity-empty"><b>History indexer not connected</b><small>${esc(state.historyNote||"This RPC provides balances and chain status only.")}</small><a href="${net.explorer}" target="_blank" rel="noopener noreferrer">Open ${esc(net.name)} explorer</a></div>`;
       return;
     }
     if(!state.history.length){
       list.innerHTML='<div class="uw-activity-empty"><b>No transactions found</b><small>No transactions were returned for this public address.</small></div>';
       return;
     }
-    list.innerHTML=state.history.map((tx,i)=>\`
+    list.innerHTML=state.history.map((tx,i)=>`
       <article class="uw-history-row">
         <div><b>${tx.failed?"Failed":tx.confirmed?"Confirmed":"Pending"}</b><small>${esc(short(tx.id))} · ${tx.timestamp?new Date(tx.timestamp*1000).toLocaleString():"time unavailable"}</small></div>
         <div class="uw-history-actions"><button data-check-tx="${i}">Verify</button><a href="${tx.explorerUrl}" target="_blank" rel="noopener noreferrer">Explorer</a></div>
         <p class="uw-history-result" id="tx-check-${i}"></p>
-      </article>\`).join("");
+      </article>`).join("");
     list.querySelectorAll("[data-check-tx]").forEach(button=>button.onclick=async()=>{
       const tx=state.history[Number(button.dataset.checkTx)];
       const output=$("tx-check-"+button.dataset.checkTx);
@@ -513,17 +513,17 @@ function renderActivity() {
 }
 
 function renderExplore() {
-  pageShell(\`
+  pageShell(`
     <div class="uw-flow-page">
       <header class="uw-flow-header">${backButton("dashboard")}<span class="uw-step-label">SUPPORTED MAINNETS</span></header>
       <h1>Explore networks</h1>
       <p class="uw-subtitle">UNITED is initialized with five independent mainnets. Each uses its own address format, transaction rules and explorer.</p>
-      <div class="uw-explore-network-list">${NETWORKS.map(n=>\`
+      <div class="uw-explore-network-list">${NETWORKS.map(n=>`
         <article class="uw-explore-network">
           <b>${esc(n.name)}</b><span>${n.symbol} · ${n.family==="evm"?"EVM-compatible network":n.family==="utxo"?"Bitcoin UTXO network":"Solana account-based network"}</span>
           <a href="${n.explorer}" target="_blank" rel="noopener noreferrer">Open block explorer ↗</a>
-        </article>\`).join("")}</div>
-    </div>\`);
+        </article>`).join("")}</div>
+    </div>`);
   bindBack("dashboard");
 }
 
