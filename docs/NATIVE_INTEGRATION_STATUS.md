@@ -62,3 +62,13 @@ The test harness is corrected to use `-daemonwait=1` so daemon initialization fa
 GitHub Actions job `127578648991` (run `114141748682`) compiled the wallet-enabled node and then failed in the node-start step. Its console shows two `Bitcoin Core starting` messages followed by `Error during initialization - check debug.log for details`. The log does **not** contain the underlying cause: with Bash `set -e`, the failing `-daemonwait` command terminated the step before the existing `dump_diagnostics` function or RPC wait logic could execute. The job's temporary datadirs were subsequently cleaned up, so the missing debug log cannot be recovered from that run.
 
 The workflow now wraps each daemon startup in an explicit conditional, captures that node's startup output, and on failure prints the captured output plus the node's `debug.log` tail and both-node process/log diagnostics before returning the original exit status. The actual consensus/node startup cause is still not proven; it will be visible in the next run's failure output.
+
+## Two-node P2P port collision fix (2026-11-06)
+
+GitHub Actions run `42124020306`, job `127583425215`, compiled successfully and started node 1. Node 2 failed during initialization. Its `debug.log` shows the following sequence:
+
+- Node 1's P2P listener was configured for port `29444`.
+- Bitcoin Core's automatic PCP/NAT-PMP port mapping opened a local helper socket at `127.0.0.1:29445` (the next port).
+- Node 2 was configured to use P2P port `29445`, so its listener collided with that helper socket. The log reports `Unable to bind to 0.0.0.0:29445` and then `Failed to listen on any port`.
+
+The CI harness now disables automatic NAT-PMP mapping (`-natpmp=0`), external address discovery (`-discover=0`) and onion listening (`-listenonion=0`) for both isolated test nodes, and explicitly binds each node to its distinct loopback P2P endpoint (`127.0.0.1:29444` and `127.0.0.1:29445`). This removes an unnecessary router-mapping feature from the local two-node test while preserving the direct TCP P2P test. The next CI run must verify startup and the remaining mining/wallet/transaction/P2P assertions.
