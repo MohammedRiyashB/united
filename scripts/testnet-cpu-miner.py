@@ -118,9 +118,12 @@ class BitcoinCLI:
             f"-rpcpassword={args.rpcpassword}",
         ]
 
-    def call(self, method: str, *params: str) -> str:
+    def call(self, method: str, *params: str, wallet: str | None = None) -> str:
+        command = [*self.base]
+        if wallet:
+            command.append(f"-rpcwallet={wallet}")
         proc = subprocess.run(
-            [*self.base, method, *params],
+            [*command, method, *params],
             check=False,
             text=True,
             stdout=subprocess.PIPE,
@@ -133,17 +136,17 @@ class BitcoinCLI:
             )
         return proc.stdout.strip()
 
-    def json(self, method: str, *params: str) -> dict[str, Any]:
-        return json.loads(self.call(method, *params))
+    def json(self, method: str, *params: str, wallet: str | None = None) -> dict[str, Any]:
+        return json.loads(self.call(method, *params, wallet=wallet))
 
 
-def mine_one(cli: BitcoinCLI, address: str, height_expected: int) -> str:
+def mine_one(cli: BitcoinCLI, address: str, wallet: str, height_expected: int) -> str:
     template = cli.json("getblocktemplate", '{"rules":["segwit"]}')
     height = int(template["height"])
     if height != height_expected:
         raise RuntimeError(f"template height {height}; expected {height_expected}")
 
-    address_info = cli.json("getaddressinfo", address)
+    address_info = cli.json("getaddressinfo", address, wallet=wallet)
     script_hex = address_info.get("scriptPubKey")
     if not script_hex:
         raise RuntimeError("getaddressinfo did not return scriptPubKey")
@@ -209,6 +212,7 @@ def main() -> int:
     parser.add_argument("--rpcuser", required=True)
     parser.add_argument("--rpcpassword", required=True)
     parser.add_argument("--address", required=True)
+    parser.add_argument("--wallet", required=True, help="wallet name containing --address")
     parser.add_argument("--blocks", type=int, default=1)
     args = parser.parse_args()
     if args.blocks < 1:
@@ -217,7 +221,7 @@ def main() -> int:
     cli = BitcoinCLI(args)
     for _ in range(args.blocks):
         height = int(cli.call("getblockcount")) + 1
-        mine_one(cli, args.address, height)
+        mine_one(cli, args.address, args.wallet, height)
     print(cli.call("getblockchaininfo"))
     return 0
 
