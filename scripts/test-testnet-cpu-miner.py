@@ -100,5 +100,35 @@ class TestCoinbaseSerialization(unittest.TestCase):
         self.assertEqual(self.commitment_script[6:], MINER.sha256d(root + bytes(32)))
 
 
+
+class TestRPCAuthentication(unittest.TestCase):
+    def test_uses_cookie_when_credentials_are_omitted(self) -> None:
+        from types import SimpleNamespace
+
+        args = SimpleNamespace(
+            cli="bitcoin-cli",
+            datadir="/tmp/united-testnet",
+            rpcport=29447,
+            rpcuser=None,
+            rpcpassword=None,
+        )
+        base = MINER.BitcoinCLI(args).base
+        self.assertNotIn("-rpcuser=", base)
+        self.assertNotIn("-rpcpassword=", base)
+
+    def test_requires_rpc_username_and_password_together(self) -> None:
+        from types import SimpleNamespace
+
+        args = SimpleNamespace(
+            cli="bitcoin-cli",
+            datadir="/tmp/united-testnet",
+            rpcport=29447,
+            rpcuser="operator",
+            rpcpassword=None,
+        )
+        with self.assertRaises(ValueError):
+            MINER.BitcoinCLI(args)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
