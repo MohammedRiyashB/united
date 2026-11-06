@@ -55,7 +55,7 @@ jobs:
           git apply --check ../core/patches/0001-add-united-regtest.patch
           git apply ../core/patches/0001-add-united-regtest.patch
           echo "===== chainparams.cpp after private-regtest patch ====="
-          nl -ba src/kernel/chainparams.cpp | sed -n '800,840p'
+          nl -ba src/kernel/chainparams.cpp | sed -n '740,790p'
           git apply --verbose --check ../core/patches/0002-add-united-public-testnet.patch
           git apply ../core/patches/0002-add-united-public-testnet.patch
       - name: Independently verify public-testnet genesis
