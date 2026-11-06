@@ -494,7 +494,7 @@ function renderActivity() {
     list.innerHTML=state.history.map((tx,i)=>`
       <article class="uw-history-row">
         <div><b>${tx.failed?"Failed":tx.confirmed?"Confirmed":"Pending"}</b><small>${esc(short(tx.id))} · ${tx.timestamp?new Date(tx.timestamp*1000).toLocaleString():"time unavailable"}</small></div>
-        <div class="uw-history-actions"><button data-check-tx="${i}">Verify</button><a href="${tx.explorerUrl}" target="_blank" rel="noopener noreferrer">Explorer</a></div>
+        <div class="uw-history-actions"><button data-check-tx="${i}">Verify</button><a href="${esc(tx.explorerUrl)}" target="_blank" rel="noopener noreferrer">Explorer</a></div>
         <p class="uw-history-result" id="tx-check-${i}"></p>
       </article>`).join("");
     list.querySelectorAll("[data-check-tx]").forEach(button=>button.onclick=async()=>{
