@@ -2,7 +2,6 @@ diff --git a/src/util/chaintype.h b/src/util/chaintype.h
 index 0000000..0000000 100644
 --- a/src/util/chaintype.h
 +++ b/src/util/chaintype.h
-@@ -15,6 +15,7 @@ enum class ChainType {
      REGTEST,
      TESTNET4,
      UNITEDREGTEST,
@@ -10,11 +9,11 @@ index 0000000..0000000 100644
  };
  
  std::string ChainTypeToString(ChainType chain);
+@@ -15,6 +15,7 @@ enum class ChainType {
 diff --git a/src/util/chaintype.cpp b/src/util/chaintype.cpp
 index 0000000..0000000 100644
 --- a/src/util/chaintype.cpp
 +++ b/src/util/chaintype.cpp
-@@ -24,6 +24,8 @@ std::string ChainTypeToString(ChainType chain)
      case ChainType::UNITEDREGTEST:
          return "unitedregtest";
 +    case ChainType::UNITEDTESTNET:
@@ -22,7 +21,7 @@ index 0000000..0000000 100644
      }
      assert(false);
  }
-@@ -41,6 +43,8 @@ std::optional<ChainType> ChainTypeFromString(std::string_view chain)
+@@ -24,5 +24,7 @@ std::string ChainTypeToString(ChainType chain)
      } else if (chain == "unitedregtest") {
          return ChainType::UNITEDREGTEST;
 +    } else if (chain == "unitedtestnet") {
@@ -30,18 +29,18 @@ index 0000000..0000000 100644
      } else {
          return std::nullopt;
      }
+@@ -41,5 +43,7 @@ std::optional<ChainType> ChainTypeFromString(std::string_view chain)
 diff --git a/src/chainparamsbase.h b/src/chainparamsbase.h
 index 0000000..0000000 100644
 --- a/src/chainparamsbase.h
 +++ b/src/chainparamsbase.h
-@@ -38,1 +38,1 @@ void SelectBaseParams(ChainType chain);
 -#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest, unitedregtest"
 +#define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest, unitedregtest, unitedtestnet"
+@@ -38,1 +38,1 @@ void SelectBaseParams(ChainType chain);
 diff --git a/src/chainparamsbase.cpp b/src/chainparamsbase.cpp
 index 0000000..0000000 100644
 --- a/src/chainparamsbase.cpp
 +++ b/src/chainparamsbase.cpp
-@@ -75,6 +75,8 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
      case ChainType::UNITEDREGTEST:
          return std::make_unique<CBaseChainParams>("unitedregtest", 29443);
 +    case ChainType::UNITEDTESTNET:
@@ -49,21 +48,21 @@ index 0000000..0000000 100644
      }
      assert(false);
  }
+@@ -75,5 +75,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
 diff --git a/src/kernel/chainparams.h b/src/kernel/chainparams.h
 index 0000000..0000000 100644
 --- a/src/kernel/chainparams.h
 +++ b/src/kernel/chainparams.h
-@@ -157,6 +157,8 @@ public:
      static std::unique_ptr<const CChainParams> UnitedRegTest(const RegTestOptions& options);
      static std::unique_ptr<const CChainParams> UnitedRegTest() { const RegTestOptions opts{}; return UnitedRegTest(opts); }
 +    static std::unique_ptr<const CChainParams> UnitedTestNet(const TestNetOptions& options);
 +    static std::unique_ptr<const CChainParams> UnitedTestNet() { const TestNetOptions opts{}; return UnitedTestNet(opts); }
      static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
+@@ -157,3 +157,5 @@ public:
 diff --git a/src/chainparams.cpp b/src/chainparams.cpp
 index 0000000..0000000 100644
 --- a/src/chainparams.cpp
 +++ b/src/chainparams.cpp
-@@ -134,6 +134,11 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const ChainType chain)
          ReadRegTestArgs(args, opts);
          return CChainParams::UnitedRegTest(opts);
      }
@@ -75,20 +74,20 @@ index 0000000..0000000 100644
      }
      assert(false);
  }
+@@ -134,6 +134,11 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const ChainType chain)
 diff --git a/src/common/args.cpp b/src/common/args.cpp
 index 0000000..0000000 100644
 --- a/src/common/args.cpp
 +++ b/src/common/args.cpp
-@@ -157,6 +157,7 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
          ChainTypeToString(ChainType::TESTNET),
          ChainTypeToString(ChainType::TESTNET4),
 +        ChainTypeToString(ChainType::UNITEDTESTNET),
          ChainTypeToString(ChainType::MAIN),
+@@ -157,3 +157,4 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
 diff --git a/src/kernel/chainparams.cpp b/src/kernel/chainparams.cpp
 index 0000000..0000000 100644
 --- a/src/kernel/chainparams.cpp
 +++ b/src/kernel/chainparams.cpp
-@@ -486,6 +486,70 @@ class CTestNet4Params : public CChainParams {
          };
      }
  };
@@ -176,7 +175,7 @@ index 0000000..0000000 100644
  std::unique_ptr<const CChainParams> CChainParams::SigNet(const SigNetOptions& options)
  {
      return std::make_unique<const SigNetParams>(options);
-@@ -714,6 +778,11 @@ std::unique_ptr<const CChainParams> CChainParams::UnitedRegTest(const RegTestOptions& options)
+@@ -486,7 +486,87 @@ class CTestNet4Params : public CChainParams {
  {
      return std::make_unique<const CUnitedRegTestParams>(options);
  }
@@ -189,14 +188,14 @@ index 0000000..0000000 100644
  std::unique_ptr<const CChainParams> CChainParams::Main(const MainNetOptions& options)
  {
      return std::make_unique<const CMainParams>(options);
-@@ -752,6 +821,7 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
+@@ -714,7 +778,12 @@ std::unique_ptr<const CChainParams> CChainParams::UnitedRegTest(const RegTestOptions& options)
      const auto signet_msg = CChainParams::SigNet()->MessageStart();
      const auto unitedregtest_msg = CChainParams::UnitedRegTest()->MessageStart();
 +    const auto unitedtestnet_msg = CChainParams::UnitedTestNet()->MessageStart();
  
      if (std::ranges::equal(message, mainnet_msg)) {
          return ChainType::MAIN;
-@@ -764,6 +834,8 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
+@@ -752,5 +821,6 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
      } else if (std::ranges::equal(message, unitedregtest_msg)) {
          return ChainType::UNITEDREGTEST;
 +    } else if (std::ranges::equal(message, unitedtestnet_msg)) {
@@ -204,14 +203,16 @@ index 0000000..0000000 100644
      }
      return std::nullopt;
  }
+@@ -764,5 +834,7 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
 diff --git a/src/bitcoin-cli.cpp b/src/bitcoin-cli.cpp
 index 0000000..0000000 100644
 --- a/src/bitcoin-cli.cpp
 +++ b/src/bitcoin-cli.cpp
-@@ -443,6 +443,8 @@
          case ChainType::UNITEDREGTEST:
              return " unitedregtest";
 +        case ChainType::UNITEDTESTNET:
 +            return " unitedtestnet";
          case ChainType::MAIN:
              return "";
+
+@@ -443,4 +443,6 @@
