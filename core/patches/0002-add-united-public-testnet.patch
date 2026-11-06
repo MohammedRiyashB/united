@@ -159,8 +159,8 @@ index 0000000..0000000 100644
 +        bech32_hrp = "unt";
 +
 +        m_headers_sync_params = HeadersSyncParams{
-+            .commitment_period = 275,
-+            .redownload_buffer_size = 7017,
++            .commitment_period = 616,
++            .redownload_buffer_size = 16199,
 +        };
 +    }
 +};
