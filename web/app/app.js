@@ -181,27 +181,31 @@ $("logout").addEventListener("click", () => runAuth("Signing out…", async () =
 }));
 
 
+window.addEventListener("united-google-connect", async () => {
+  try {
+    await authReady;
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    await signInWithPopup(auth, provider);
+  } catch (error) {
+    console.error("UNITED Google connection error:", error);
+    alert(explainAuthError(error));
+  }
+});
+
 onAuthStateChanged(auth, (user) => {
-  $("auth-view").hidden = Boolean(user);
-  $("account-view").hidden = !user;
+  // Wallet creation is the home screen. Google sign-in is optional and lives in Settings.
+  $("auth-view").hidden = true;
+  $("account-view").hidden = false;
   if (user) {
+    const deviceKey = "united.wallet.v1.device";
+    const accountKey = "united.wallet.v1." + user.uid;
+    if (!localStorage.getItem(accountKey) && localStorage.getItem(deviceKey)) {
+      localStorage.setItem(accountKey, localStorage.getItem(deviceKey));
+    }
     mountUnitedWallet(user);
-    const identity = user.isAnonymous
-      ? "Guest account · " + user.uid
-      : (user.email || user.displayName || user.uid);
-    $("account-identity").textContent = identity;
-    const providerIds = (user.providerData || []).map((item) => item.providerId);
-    const providerLabel = user.isAnonymous
-      ? "Anonymous session"
-      : providerIds.length
-        ? "Signed in with " + providerIds.map((id) => ({
-            "google.com": "Google",
-            "github.com": "GitHub",
-            "password": "Email and password"
-          }[id] || id)).join(", ")
-        : "Verified Firebase session";
-    $("account-provider").textContent = providerLabel;
-    setStatus("");
+  } else {
+    mountUnitedWallet({ uid: "device" });
   }
 });
 
