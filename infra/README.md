@@ -23,3 +23,11 @@ No UNITED production infrastructure currently exists.
 ## Pre-mainnet infrastructure evidence
 
 Publish node operator requirements, seed list ownership, infrastructure status, monitoring/incident process, backup/recovery tests and a public health dashboard only after the corresponding services exist and are independently verified.
+
+## Public-testnet deployment templates
+
+The candidate deployment layout is in [`infra/public-testnet/`](public-testnet/README.md):
+- `unitedtestnet.conf.example` keeps RPC on loopback and opens the separate P2P listener.
+- `unitedtestnet.service` runs the node under a dedicated non-root `united` account.
+
+These are templates only. No host, IP, DNS seed or bootstrap service is deployed by this repository. Provision at least two independent public peers, verify each exact genesis and external reachability, then publish their real endpoints. Never expose RPC port 29447.
