@@ -5,6 +5,7 @@ on:
     branches:
       - consensus/bitcoin-core-32.1-migration
       - integration/bitcoin-core-32.1-native
+      - feature/united-public-testnet
     paths:
       - ".github/workflows/bitcoin-core-upstream.yml"
       - "core/upstream.lock.toml"
@@ -45,11 +46,15 @@ jobs:
           test "$actual_commit" = "$expected_commit"
           git checkout --detach "$expected_commit"
           git show -s --format='Pinned upstream commit: %H%n%s' HEAD
-      - name: Apply UNITED native C++ patch
+      - name: Apply UNITED native C++ patches
         run: |
           cd upstream
           git apply --check ../core/patches/0001-add-united-regtest.patch
           git apply ../core/patches/0001-add-united-regtest.patch
+          git apply --check ../core/patches/0002-add-united-public-testnet.patch
+          git apply ../core/patches/0002-add-united-public-testnet.patch
+      - name: Independently verify public-testnet genesis
+        run: python3 scripts/verify-united-testnet-genesis.py
       - name: Configure minimal daemon build
         run: |
           cmake -S upstream -B upstream/build -G Ninja \
@@ -168,6 +173,107 @@ jobs:
           "$cli" "${rpc1[@]}" generatetoaddress 1 "$address1" >/dev/null
 
           # Wait for node 2 to receive the block and transaction over P2P.
+          synced=0
+          for attempt in $(seq 1 30); do
+            height2="$("$cli" "${rpc2[@]}" getblockcount)"
+            if [[ "$height2" -ge 102 ]]; then synced=1; break; fi
+            sleep 1
+          done
+          test "$synced" -eq 1
+          received="$("$cli" "${wallet2[@]}" getbalance)"
+          awk -v b="$received" 'BEGIN { exit !(b >= 1.0) }'
+          "$cli" "${rpc1[@]}" getblockchaininfo
+          "$cli" "${rpc2[@]}" getblockchaininfo
+      - name: Start two UNITED public-testnet nodes and verify mining, wallets, transactions and P2P
+        shell: bash
+        run: |
+          set -euo pipefail
+          cli="upstream/build/bin/bitcoin-cli"
+          daemon="upstream/build/bin/bitcoind"
+          node1="$(mktemp -d)"
+          node2="$(mktemp -d)"
+          rpc_user="unitedci"
+          rpc_pass="ci-secret"
+          rpc1=(-chain=unitedtestnet -datadir="$node1" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29554)
+          rpc2=(-chain=unitedtestnet -datadir="$node2" -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29564)
+          wallet1=("${rpc1[@]}" -rpcwallet=united-testnet-miner)
+          wallet2=("${rpc2[@]}" -rpcwallet=united-testnet-recipient)
+          cleanup() {
+            "$cli" "${rpc2[@]}" stop >/dev/null 2>&1 || true
+            "$cli" "${rpc1[@]}" stop >/dev/null 2>&1 || true
+            rm -rf "$node1" "$node2"
+          }
+          dump_logs() {
+            echo "===== Public testnet node1 debug.log ====="
+            find "$node1" -name debug.log -type f -print -exec tail -n 160 {} \; || true
+            echo "===== Public testnet node2 debug.log ====="
+            find "$node2" -name debug.log -type f -print -exec tail -n 160 {} \; || true
+          }
+          trap cleanup EXIT
+
+          start_node() {
+            local datadir="$1" rpcport="$2" p2pport="$3"
+            local startup_log="$datadir/startup.log"
+            if "$daemon" -chain=unitedtestnet -datadir="$datadir" \
+              -daemonwait=1 -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" \
+              -rpcport="$rpcport" -port="$p2pport" -bind="127.0.0.1:$p2pport" \
+              -natpmp=0 -discover=0 -listenonion=0 -fallbackfee=0.0002 -debug=1 \
+              >"$startup_log" 2>&1; then
+              cat "$startup_log"
+            else
+              status=$?
+              cat "$startup_log" >&2 || true
+              dump_logs
+              return "$status"
+            fi
+          }
+          start_node "$node1" 29554 29555
+          start_node "$node2" 29564 29556
+
+          wait_rpc() {
+            local -n args=$1
+            local last_error=""
+            for attempt in $(seq 1 90); do
+              if last_error="$("$cli" "${args[@]}" getblockchaininfo 2>&1)"; then return 0; fi
+              sleep 1
+            done
+            echo "Public testnet RPC not ready: $last_error" >&2
+            dump_logs
+            return 1
+          }
+          wait_rpc rpc1
+          wait_rpc rpc2
+
+          expected="00003b8e20fef32b7abc0c295c9bbce1931bc53f5688aeeb75301b997ba6bd00"
+          test "$("$cli" "${rpc1[@]}" getblockhash 0)" = "$expected"
+          test "$("$cli" "${rpc2[@]}" getblockhash 0)" = "$expected"
+
+          "$cli" "${rpc1[@]}" createwallet "united-testnet-miner"
+          "$cli" "${rpc2[@]}" createwallet "united-testnet-recipient"
+          address1="$("$cli" "${wallet1[@]}" getnewaddress)"
+          address2="$("$cli" "${wallet2[@]}" getnewaddress)"
+          [[ "$address1" == unt1* ]]
+          [[ "$address2" == unt1* ]]
+
+          "$cli" "${rpc1[@]}" generatetoaddress 101 "$address1" >/dev/null
+          mined="$("$cli" "${rpc1[@]}" getblockcount)"
+          test "$mined" -eq 101
+          balance1="$("$cli" "${wallet1[@]}" getbalance)"
+          awk -v b="$balance1" 'BEGIN { exit !(b >= 50.0) }'
+
+          "$cli" "${rpc1[@]}" addnode "127.0.0.1:29556" "onetry"
+          peer_count=0
+          for attempt in $(seq 1 30); do
+            peer_count="$("$cli" "${rpc1[@]}" getconnectioncount)"
+            if [[ "$peer_count" -ge 1 ]]; then break; fi
+            sleep 1
+          done
+          test "$peer_count" -ge 1
+
+          txid="$("$cli" "${wallet1[@]}" sendtoaddress "$address2" 1.0)"
+          test -n "$txid"
+          "$cli" "${rpc1[@]}" generatetoaddress 1 "$address1" >/dev/null
+
           synced=0
           for attempt in $(seq 1 30); do
             height2="$("$cli" "${rpc2[@]}" getblockcount)"
