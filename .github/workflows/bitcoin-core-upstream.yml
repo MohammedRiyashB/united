@@ -210,12 +210,30 @@ jobs:
           }
           trap cleanup EXIT
 
-          "$daemon" -chain=unitedtestnet -datadir="$node1" -daemonwait=1 \
-            -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29447 \
-            -port=29446 -bind=127.0.0.1:29446 -natpmp=0 -discover=0 -listenonion=0
-          "$daemon" -chain=unitedtestnet -datadir="$node2" -daemonwait=1 \
-            -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport=29449 \
-            -port=29448 -bind=127.0.0.1:29448 -natpmp=0 -discover=0 -listenonion=0
+          start_testnet_node() {
+            local label="$1"
+            local datadir="$2"
+            local rpcport="$3"
+            local p2pport="$4"
+            local startup_log="$datadir/bitcoind-startup.log"
+            local status=0
+            if "$daemon" -chain=unitedtestnet -datadir="$datadir" -daemonwait=1 \
+              -rpcuser="$rpc_user" -rpcpassword="$rpc_pass" -rpcport="$rpcport" \
+              -port="$p2pport" -bind="127.0.0.1:$p2pport" \
+              -natpmp=0 -discover=0 -listenonion=0 -debug=1 >"$startup_log" 2>&1; then
+              cat "$startup_log"
+              echo "===== $label initialized ====="
+            else
+              status=$?
+              echo "===== $label startup failed (exit $status) =====" >&2
+              cat "$startup_log" >&2 || true
+              find "$datadir" -name debug.log -type f -print -exec tail -n 160 {} \; >&2 || true
+              dump_testnet_logs
+              return "$status"
+            fi
+          }
+          start_testnet_node node1 "$node1" 29447 29446
+          start_testnet_node node2 "$node2" 29449 29448
 
           wait_rpc() {
             local -n args=$1
