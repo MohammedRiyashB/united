@@ -412,6 +412,11 @@ export function mountUnitedWallet(user={uid:"device"}) {
   currentUser=user;
   // Wallets are device-local. Optional Google auth never moves private keys to cloud storage.
   KEY="united.wallet.v1.device";
+  // Migrate a single legacy account-scoped encrypted vault to the device-local wallet slot.
+  if(!localStorage.getItem(KEY)){
+    const legacyKeys=Object.keys(localStorage).filter(k=>k.startsWith("united.wallet.v1.")&&k!=="united.wallet.v1.device");
+    if(legacyKeys.length===1)localStorage.setItem(KEY,localStorage.getItem(legacyKeys[0]));
+  }
   const raw=localStorage.getItem(KEY);
   if(raw){try{const meta=JSON.parse(raw);activeWalletId=meta.activeWalletId||activeWalletId;}catch{}}
   wallets=[];activeWallet=null;unlockedPassword=null;
