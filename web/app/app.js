@@ -19,7 +19,6 @@ const authReady = setPersistence(auth, browserLocalPersistence);
 
 // The wallet loads instantly and remains device-local, regardless of Google auth state.
 mountUnitedWallet({ uid: "device" });
-document.getElementById("auth-view")?.setAttribute("hidden", "");
 document.getElementById("account-view")?.removeAttribute("hidden");
 
 window.addEventListener("united-google-connect", async () => {
@@ -44,6 +43,7 @@ window.addEventListener("united-google-connect", async () => {
 // Do not remount or lock the active wallet when Google auth state changes.
 // Google identity and the local encrypted wallet are separate by design.
 onAuthStateChanged(auth, (user) => {
+  window.unitedAccountConnected = Boolean(user);
   window.dispatchEvent(new CustomEvent("united-account-state", {
     detail: { connected: Boolean(user), email: user?.email || null }
   }));
