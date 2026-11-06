@@ -121,6 +121,30 @@ The native integration branch now contains a separate `unitedregtest` chain type
 
 The private genesis is timestamp `1700000000`, nonce `1`, Merkle root `a9d90d5e7998936472072e79bc476b84d400c5ac22f174e23051c01778c25cc7`, and header hash `6d8278642c6e1390286c74bd2697c5251771e9da1b860a5bd3d692b5d0ead151`. These values are not suitable for a public testnet or mainnet. The public testnet and mainnet each need their own reviewed consensus and network parameters.
 
-## 9. Open values required before implementation can be called complete
+## 9. Public testnet candidate (branch validation pending)
 
-The following are intentionally not guessed for public testnet and mainnet: `powLimit`, genesis parameters, P2P magic/ports, address prefixes/HRPs, initial script deployment schedule, DNS seeds, checkpoints, minimum chainwork, assume-valid policy, public testnet difficulty policy and final release versioning. These require collision checks, operator/security review and committed test vectors.
+The separate `unitedtestnet` candidate uses the following values, distinct from private regtest and future mainnet:
+
+| Parameter | Candidate value |
+|---|---|
+| Chain type | `unitedtestnet` |
+| Message magic | `fa b1 d0 02` |
+| P2P / RPC ports | 29446 / 29447 |
+| Address HRP | `tunit` |
+| Base58 pubkey/script/WIF prefixes | 75 / 76 / 203 |
+| Initial subsidy / halving | 50 UNITED / 210,000 blocks |
+| Target spacing / timespan | 600 seconds / 1,209,600 seconds |
+| Retarget interval | 2,016 blocks |
+| PoW limit / genesis bits | `000fffff00000000000000000000000000000000000000000000000000000000` / `0x1f0fffff` |
+| Minimum-difficulty exception | Enabled after the upstream testnet delay rule |
+| BIP94 difficulty-retarget protection | Enabled |
+| No-retarget mode | Disabled |
+| Genesis hash | `00057ebf90a85fff3a45bd543a266d8ed59bc76ee3aadab4fc216416582686d0` |
+
+The implementation derives its initial activation/deployment defaults from Bitcoin Core v32.1 testnet4 mechanics, but removes Bitcoin testnet4 chainwork, assume-valid state, snapshots, seed lists and genesis. These parameters still require independent review and wider collision checks. The public-testnet candidate is not mainnet configuration.
+
+**Known blockers:** no DNS seeds or fixed seeds have been deployed; no public bootstrap hosts, pool/miner, release binaries or independent consensus/security review exist. The branch CI validates two local testnet nodes only.
+
+## 10. Open values required before implementation can be called complete
+
+The following remain unset for mainnet: `powLimit`, genesis parameters, P2P magic/ports, address prefixes/HRPs, initial script deployment schedule, DNS seeds, checkpoints, minimum chainwork, assume-valid policy and final release versioning. The public-testnet candidate values above are provisional until independent review. These require collision checks, operator/security review and committed test vectors.
