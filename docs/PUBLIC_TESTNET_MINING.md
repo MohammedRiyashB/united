@@ -65,6 +65,7 @@ Replace the example address below with your own payout address:
 sudo -u united python3 /usr/local/libexec/united/testnet-cpu-miner.py \\
   --cli /usr/local/bin/bitcoin-cli \\
   --datadir /var/lib/unitedtestnet \\
+  --conf /etc/united/unitedtestnet.conf \\
   --rpcport 29447 \\
   --address "tunit1_REPLACE_WITH_YOUR_ADDRESS" \\
   --wallet united-testnet-miner \\
