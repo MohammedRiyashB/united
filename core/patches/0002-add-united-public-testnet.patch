@@ -84,7 +84,7 @@ diff --git a/src/kernel/chainparams.cpp b/src/kernel/chainparams.cpp
 index 0000000..0000000 100644
 --- a/src/kernel/chainparams.cpp
 +++ b/src/kernel/chainparams.cpp
-@@ -757,8 +757,87 @@
+@@ -758,8 +758,87 @@
          bech32_hrp = "unitrt";
  
          m_headers_sync_params = HeadersSyncParams{
