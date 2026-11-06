@@ -6,6 +6,7 @@ on:
       - consensus/bitcoin-core-32.1-migration
       - integration/bitcoin-core-32.1-native
       - feature/united-public-testnet
+      - integration/united-regtest-functional-tests
     paths:
       - ".github/workflows/bitcoin-core-upstream.yml"
       - "core/upstream.lock.toml"
