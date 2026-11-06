@@ -1,6 +1,20 @@
 name: Bitcoin Core v32.1 native UNITED build
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/bitcoin-core-upstream.yml"
+      - "core/upstream.lock.toml"
+      - "core/patches/**"
+      - "config/**"
+      - "scripts/bootstrap-bitcoin-core.sh"
+      - "scripts/build-united-node.sh"
+      - "scripts/verify-public-testnet-genesis.py"
+      - "scripts/testnet-cpu-miner.py"
+      - "scripts/test-testnet-cpu-miner.py"
+      - "infra/public-testnet/**"
   pull_request:
     branches:
       - main
