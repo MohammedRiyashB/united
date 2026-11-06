@@ -1,6 +1,6 @@
 # UNITED Public Testnet Go/No-Go Checklist
 
-**Current decision: NO-GO for public announcement.** A public-testnet candidate chain type and genesis are implemented on `network/united-public-testnet`; native compile and end-to-end testnet GBT mining/transfer CI remain pending. This checklist defines the evidence required before announcing or distributing a live public UNITED testnet.
+**Current decision: NO-GO for public announcement.** The native public-testnet chain, two-node GBT mining/transfer and P2P integration passed CI on an earlier candidate revision. The current revision adds an installable node bundle and a witness-transaction-capable solo CPU miner; its fresh native CI is running. No public peer operators have been deployed. This checklist defines the evidence required before announcing a live public UNITED testnet.
 
 Testnet coins must be clearly labelled as valueless. Do not accept deposits, sell testnet coins, promise returns, or reuse any mainnet keys, addresses, data directories or credentials.
 
@@ -28,7 +28,8 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 - [x] Pass the upgraded witness-commitment-aware GBT miner in native run [42165119964](https://github.com/MohammedRiyashB/united/actions/runs/42165119964); offline serialization tests also pass in Go CI run [42165119995](https://github.com/MohammedRiyashB/united/actions/runs/42165119995).
 - [ ] Add multi-node backup/restore, disconnection, partition, restart and competing-chain reorganization tests.
 - [ ] Have independent reviewers inspect every consensus-critical patch. No unresolved critical/high findings.
-- [ ] Produce reproducible source builds and candidate binaries with checksums, provenance and offline-signed release metadata.
+- [ ] Complete reproducible source builds and independent verification of candidate binary checksums/provenance.
+- [ ] Publish offline-signed release metadata, SBOM and a formal signed release.
 
 ## Public peer and operator infrastructure
 
@@ -36,8 +37,9 @@ Testnet coins must be clearly labelled as valueless. Do not accept deposits, sel
 - [ ] Verify peer discovery, connection limits, anti-eclipse/Sybil mitigations, ban behavior and restart/recovery.
 - [ ] Publish a safe node operator guide with firewall rules. P2P may be public; wallet/admin RPC must remain localhost or private.
 - [ ] Operate independent archival/full nodes and monitoring for height, chain-tip age, peer diversity, reorg depth, hash rate, disk and uptime.
-- [x] Add a test-only getblocktemplate/submitblock CPU miner for CI and a manual operator example.
-- [ ] Publish production mining instructions and verify at least two independent miner/operator setups; no founder-only block production.
+- [x] Add an experimental solo CPU SHA-256d miner using local getblocktemplate/submitblock, BIP141 witness commitments, SegWit transaction hashes and local-cookie RPC authentication.
+- [x] Publish an operator mining guide for solo CPU testnet mining.
+- [ ] Publish and operate a production-scale Stratum pool for ASIC participation, and verify independent miner/operator setups; no founder-only block production.
 - [ ] Publish wallet install/build, address verification, backup/restore and transaction verification instructions.
 - [ ] Establish a monitored private vulnerability disclosure channel and response process before inviting public users.
 - [ ] Publish a public incident contact, issue triage process and testnet reset/recovery policy.
