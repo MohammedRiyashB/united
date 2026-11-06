@@ -5,14 +5,14 @@ This is a static browser frontend using Firebase Authentication. It supports Ema
 ## Firebase setup
 
 1. In Firebase Console, open Authentication → Settings → Authorized domains.
-2. Add the actual Hosting domain (for example, `unitednetwork.web.app`) if it is not already listed.
+2. Add the actual Hosting domain (for example, `unitedcryptonetwork.web.app`) if it is not already listed.
 3. Confirm Email/Password, Google, GitHub, and Anonymous providers are enabled.
 4. For GitHub sign-in, configure the GitHub OAuth app callback URL shown by Firebase in the GitHub provider settings.
 5. Do not loosen Realtime Database rules for this login page; it does not access the database.
 
 ## Deploy
 
-The repository currently has no Firebase Hosting configuration at its root. From a trusted Firebase CLI environment, configure Hosting to serve the `web/app` directory, then deploy. Example Hosting public directory: `web/app`.
+The repository root already contains `.firebaserc` and `firebase.json`; the configured Hosting public directory is `web/app`. From a trusted machine with Firebase CLI access, run `firebase deploy --only hosting --project unitedcryptonetwork`. The expected Hosting domain is `https://unitedcryptonetwork.web.app/`.
 
 ## Security boundaries
 
