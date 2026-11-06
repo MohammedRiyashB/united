@@ -324,12 +324,13 @@ jobs:
         run: |
           set -euo pipefail
           dist="$RUNNER_TEMP/united-testnet-dist"
-          mkdir -p "$dist/bin" "$dist/etc/united" "$dist/lib/systemd/system" "$dist/docs"
+          mkdir -p "$dist/bin" "$dist/etc/united" "$dist/lib/systemd/system" "$dist/docs" "$dist/share/united"
           install -m 0755 upstream/build/bin/bitcoind "$dist/bin/bitcoind"
           install -m 0755 upstream/build/bin/bitcoin-cli "$dist/bin/bitcoin-cli"
           install -m 0644 infra/public-testnet/unitedtestnet.conf.example "$dist/etc/united/unitedtestnet.conf.example"
           install -m 0644 infra/public-testnet/unitedtestnet.service "$dist/lib/systemd/system/unitedtestnet.service"
           install -m 0755 infra/public-testnet/install-node.sh "$dist/install-node.sh"
+          install -m 0644 scripts/testnet-cpu-miner.py "$dist/share/united/testnet-cpu-miner.py"
           install -m 0644 LICENSE "$dist/LICENSE"
           install -m 0644 docs/PUBLIC_TESTNET.md "$dist/docs/PUBLIC_TESTNET.md"
           cat > "$dist/BUILD-METADATA.txt" <<EOF
@@ -346,7 +347,7 @@ jobs:
           EOF
           (
             cd "$dist"
-            find bin etc lib docs -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+            find bin etc lib docs share -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
             sha256sum install-node.sh LICENSE BUILD-METADATA.txt >> SHA256SUMS
           )
           archive="$RUNNER_TEMP/united-testnet-linux-x86_64-$GITHUB_SHA.tar.gz"
