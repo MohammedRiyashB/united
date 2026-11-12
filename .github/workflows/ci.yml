@@ -30,7 +30,7 @@ jobs:
       - name: Build CLI
         run: go build ./cmd/united-params ./cmd/united-powdemo
       - name: Check browser P2P module syntax
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Validate browser P2P module syntax
